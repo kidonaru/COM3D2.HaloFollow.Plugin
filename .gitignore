@@ -1,0 +1,14 @@
+.env
+.vscode
+source/.vs
+source/*/.vs
+source/*/bin
+source/*/obj
+*.pdb
+output/
+.codegraph/
+
+# ビルド成果物。build.bat が毎回生成するため追跡しない
+BepInEx/plugins/*.dll
+
+.superpowers/
