@@ -54,7 +54,7 @@ namespace COM3D2.HaloFollow.Plugin
                 dot = -dot;
             }
 
-            // 角度がほぼ 0 だと sin(θ) での除算が不安定になる
+            // 常に球面補間にすると、角度がほぼ 0 のとき sin(θ) での除算が不安定になる
             if (dot > LinearThreshold)
             {
                 return Normalize(new Quaternion(

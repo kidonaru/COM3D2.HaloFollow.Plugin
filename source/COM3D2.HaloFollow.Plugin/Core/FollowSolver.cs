@@ -145,12 +145,12 @@ namespace COM3D2.HaloFollow.Plugin
 
         private void ClampFollow(ref Vector3 pos, ref Quaternion rot, Vector3 targetPos, Quaternion targetRot, FollowSettings s)
         {
-            var max = Math.Max(0f, s.MaxPositionOffset);
             var lag = pos - targetPos;
-            if (lag.sqrMagnitude > max * max)
+            var clamped = ClampLength(lag, s.MaxPositionOffset);
+            if (clamped != lag)
             {
                 var dir = lag.normalized;
-                pos = targetPos + dir * max;
+                pos = targetPos + clamped;
                 // 外向きの速度を残すと、上限に張り付いたまま戻りが遅れる
                 var outward = Vector3.Dot(_velocity, dir);
                 if (outward > 0f)
@@ -181,13 +181,14 @@ namespace COM3D2.HaloFollow.Plugin
 
         private FollowPose Compose(Vector3 targetPos, FollowSettings s)
         {
-            var offset = Position - targetPos + s.Up * FloatOffset(s);
-            var max = Math.Max(0f, s.MaxPositionOffset);
-            if (offset.sqrMagnitude > max * max)
-            {
-                offset = offset.normalized * max;
-            }
+            var offset = ClampLength(Position - targetPos + s.Up * FloatOffset(s), s.MaxPositionOffset);
             return new FollowPose { Position = targetPos + offset, Rotation = Rotation };
+        }
+
+        private static Vector3 ClampLength(Vector3 v, float maxLength)
+        {
+            var max = Math.Max(0f, maxLength);
+            return v.sqrMagnitude > max * max ? v.normalized * max : v;
         }
     }
 }

@@ -12,6 +12,40 @@
     <ManagedDir>$(GameDir)\COM3D2x64_Data\Managed</ManagedDir>
   </PropertyGroup>
   <ItemGroup>
+    <!-- MTEUtils (submodule) から、ギアメニューとドッキング対応ウィンドウ一式だけをリンクする。
+         MTEUtils は利用側が明示列挙する前提のため glob にしない。依存が増えたら CS0246 の型のファイルを足す -->
+    <Compile Include="..\..\MTEUtils\GearMenu.cs" Link="MTEUtils\GearMenu.cs" />
+    <Compile Include="..\..\MTEUtils\ColorExtensions.cs" Link="MTEUtils\ColorExtensions.cs" />
+    <Compile Include="..\..\MTEUtils\ColorPickerWindow.cs" Link="MTEUtils\ColorPickerWindow.cs" />
+    <Compile Include="..\..\MTEUtils\CurveData.cs" Link="MTEUtils\CurveData.cs" />
+    <Compile Include="..\..\MTEUtils\CurveEditorWindow.cs" Link="MTEUtils\CurveEditorWindow.cs" />
+    <Compile Include="..\..\MTEUtils\DialogPopupWindow.cs" Link="MTEUtils\DialogPopupWindow.cs" />
+    <Compile Include="..\..\MTEUtils\DockableWindowBase.cs" Link="MTEUtils\DockableWindowBase.cs" />
+    <Compile Include="..\..\MTEUtils\DockingClient.cs" Link="MTEUtils\DockingClient.cs" />
+    <Compile Include="..\..\MTEUtils\Extensions.cs" Link="MTEUtils\Extensions.cs" />
+    <Compile Include="..\..\MTEUtils\GUICache.cs" Link="MTEUtils\GUICache.cs" />
+    <Compile Include="..\..\MTEUtils\GUIComboBox.cs" Link="MTEUtils\GUIComboBox.cs" />
+    <Compile Include="..\..\MTEUtils\GUIScale.cs" Link="MTEUtils\GUIScale.cs" />
+    <Compile Include="..\..\MTEUtils\GUIView.cs" Link="MTEUtils\GUIView.cs" />
+    <Compile Include="..\..\MTEUtils\IGUIWindow.cs" Link="MTEUtils\IGUIWindow.cs" />
+    <Compile Include="..\..\MTEUtils\IScreenScalableWindow.cs" Link="MTEUtils\IScreenScalableWindow.cs" />
+    <Compile Include="..\..\MTEUtils\ITabVisibleWindow.cs" Link="MTEUtils\ITabVisibleWindow.cs" />
+    <Compile Include="..\..\MTEUtils\InputRemapperClient.cs" Link="MTEUtils\InputRemapperClient.cs" />
+    <Compile Include="..\..\MTEUtils\MTEUtils.cs" Link="MTEUtils\MTEUtils.cs" />
+    <Compile Include="..\..\MTEUtils\MainThreadDispatcher.cs" Link="MTEUtils\MainThreadDispatcher.cs" />
+    <Compile Include="..\..\MTEUtils\ManagerRegistry.cs" Link="MTEUtils\ManagerRegistry.cs" />
+    <Compile Include="..\..\MTEUtils\ResizeCursor.cs" Link="MTEUtils\ResizeCursor.cs" />
+    <Compile Include="..\..\MTEUtils\TabBarDrawer.cs" Link="MTEUtils\TabBarDrawer.cs" />
+    <Compile Include="..\..\MTEUtils\TabBarLayout.cs" Link="MTEUtils\TabBarLayout.cs" />
+    <Compile Include="..\..\MTEUtils\TooltipDrawer.cs" Link="MTEUtils\TooltipDrawer.cs" />
+    <Compile Include="..\..\MTEUtils\TransformCache.cs" Link="MTEUtils\TransformCache.cs" />
+    <Compile Include="..\..\MTEUtils\UIScaleClient.cs" Link="MTEUtils\UIScaleClient.cs" />
+    <Compile Include="..\..\MTEUtils\UIScaleSliderRow.cs" Link="MTEUtils\UIScaleSliderRow.cs" />
+    <Compile Include="..\..\MTEUtils\WindowManagerBase.cs" Link="MTEUtils\WindowManagerBase.cs" />
+    <Compile Include="..\..\MTEUtils\WindowResizeController.cs" Link="MTEUtils\WindowResizeController.cs" />
+    <EmbeddedResource Include="Resources\gear_icon.png" LogicalName="gear_icon.png" />
+  </ItemGroup>
+  <ItemGroup>
     <InternalsVisibleTo Include="COM3D2.HaloFollow.Plugin.Tests" />
   </ItemGroup>
   <ItemGroup>
@@ -37,6 +71,18 @@
     </Reference>
     <Reference Include="UnityEngine.InputLegacyModule">
       <HintPath>$(ManagedDir)\UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>$(ManagedDir)\Assembly-CSharp-firstpass.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(ManagedDir)\UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>$(ManagedDir)\UnityEngine.ImageConversionModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="BepInEx">

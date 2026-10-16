@@ -11,6 +11,7 @@ namespace COM3D2.HaloFollow.Plugin
     /// <summary>メイドの主モーションの 1 フレーム分の状態。State が null ならモーションなし</summary>
     internal struct AnimationSample
     {
+        // AnimationState 型にすると、ネイティブ依存のためテストから生成できない
         public object State;
         public float Time;
         public float Speed;
@@ -44,7 +45,7 @@ namespace COM3D2.HaloFollow.Plugin
 
             // シーク扱いにすると、ゲームのクロスフェードによる通常のモーション切替でも追従が途切れる。
             // 姿勢の跳びは FollowSolver の瞬間移動判定で拾う
-            if (!ReferenceEquals(previous.State, current.State))
+            if (!Equals(previous.State, current.State))
             {
                 return Advance(playing ? gameDeltaTime : 0f);
             }
