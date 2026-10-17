@@ -7,7 +7,9 @@ cd /d %~dp0
 rem :build の直前に日本語の rem を置くと、cmd が call :build のラベル探索で行を読み違えて実行するため、そこは ASCII にする
 
 set PLUGIN_NAME=COM3D2.HaloFollow.Plugin
-set ASSEMBLY_NAME=COM3D2.HaloFollow
+set ASSEMBLY_NAME=COM3D2.HaloFollow.Plugin
+rem 旧 BepInEx 版の dll 名。名前が変わったため上書きされず、残ると二重に動く
+set OLD_BEPINEX_DLL=COM3D2.HaloFollow.dll
 set REPO_DIR=%~dp0..\..
 
 rem 引数: %1 = debug/release (既定 release), %2 = com3d2/com3d25/all (既定 all)
@@ -27,13 +29,12 @@ if not exist "%ENV_FILE%" (
 )
 for /f "usebackq eol=# tokens=1,* delims==" %%a in ("%ENV_FILE%") do set "%%a=%%b"
 
-if not "%TARGET%"=="com3d25" (
-    if "%COM3D2_DIR%"=="" (
-        echo .env に COM3D2_DIR が設定されていません
-        exit /b 1
-    )
-    echo COM3D2_DIR: %COM3D2_DIR%
+rem COM3D2.5 版も COM3D2 側の Sybaris\lib\UnityInjector.dll を参照するため、COM3D2_DIR は常に要る
+if "%COM3D2_DIR%"=="" (
+    echo .env に COM3D2_DIR が設定されていません
+    exit /b 1
 )
+echo COM3D2_DIR: %COM3D2_DIR%
 if not "%TARGET%"=="com3d2" (
     if "%COM3D25_DIR%"=="" (
         echo .env に COM3D25_DIR が設定されていません
@@ -48,13 +49,13 @@ if "%CONFIG%"=="Release" set BUILD_OPTIONS=--no-incremental
 
 rem ============ COM3D2 版 ============
 if not "%TARGET%"=="com3d25" (
-    call :build net35 "BepInEx\plugins" "%COM3D2_DIR%" COM3D2
+    call :build net35 "UnityInjector" "%COM3D2_DIR%" COM3D2
     if !ERRORLEVEL! neq 0 exit /b 1
 )
 
 rem ============ COM3D2.5 版 ============
 if not "%TARGET%"=="com3d2" (
-    call :build net471 "BepInEx25\plugins" "%COM3D25_DIR%" COM3D2.5
+    call :build net471 "UnityInjector25" "%COM3D25_DIR%" COM3D2.5
     if !ERRORLEVEL! neq 0 exit /b 1
 )
 
@@ -77,11 +78,16 @@ if !ERRORLEVEL! neq 0 (
     exit /b 1
 )
 
-rem ゲームへのデプロイ ※ゲーム起動中は BepInEx が dll をロックするため失敗しても続行
-copy /y bin\%CONFIG%\%~1\%ASSEMBLY_NAME%.dll "%~3\BepInEx\plugins\" >nul
+rem ゲームへのデプロイ ※ゲーム起動中は dll がロックされるため失敗しても続行
+copy /y bin\%CONFIG%\%~1\%ASSEMBLY_NAME%.dll "%~3\Sybaris\UnityInjector\" >nul
 if !ERRORLEVEL! neq 0 (
     echo 警告: %~4 へのデプロイに失敗しました ^(ゲーム起動中?^)
 ) else (
     echo %~4 へデプロイしました
+)
+
+rem 自動で消すと、利用者が意図して残した旧版を黙って失う
+if exist "%~3\BepInEx\plugins\%OLD_BEPINEX_DLL%" (
+    echo 警告: %~4 に旧 BepInEx 版が残っています。二重に動くため削除してください: %~3\BepInEx\plugins\%OLD_BEPINEX_DLL%
 )
 exit /b 0

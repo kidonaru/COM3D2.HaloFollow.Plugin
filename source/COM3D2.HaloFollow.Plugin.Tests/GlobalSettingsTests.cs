@@ -110,6 +110,29 @@ namespace COM3D2.HaloFollow.Plugin.Tests
         }
 
         [Fact]
+        public void config_exampleのXMLを既定値として読める()
+        {
+            var path = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "HaloFollow.xml");
+            Assert.True(File.Exists(path));
+
+            var loaded = new GlobalSettingsStore(path, _warnings.Add).Load();
+            var defaults = new GlobalSettings();
+
+            Assert.Empty(_warnings);
+            Assert.Equal(defaults.enabled, loaded.enabled);
+            Assert.Equal(defaults.windowShortcut, loaded.windowShortcut);
+            Assert.Equal(defaults.teleportDistanceCm, loaded.teleportDistanceCm);
+            Assert.Equal(defaults.teleportAngle, loaded.teleportAngle);
+            Assert.Equal(defaults.frameStepMax, loaded.frameStepMax);
+            Assert.Equal(defaults.seekTolerance, loaded.seekTolerance);
+            Assert.Equal(defaults.windowX, loaded.windowX);
+            Assert.Equal(defaults.windowY, loaded.windowY);
+            Assert.Equal(defaults.windowWidth, loaded.windowWidth);
+            Assert.Equal(defaults.windowHeight, loaded.windowHeight);
+            Assert.Equal(defaults.uiScale, loaded.uiScale);
+        }
+
+        [Fact]
         public void 親フォルダが無くても保存できる()
         {
             using (var temp = new TempDirectory())

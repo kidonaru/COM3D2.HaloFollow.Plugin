@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<HaloFollow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" version="1">
+  <enabled>true</enabled>
+  <windowShortcut>Ctrl+Shift+H</windowShortcut>
+  <teleportDistanceCm>20</teleportDistanceCm>
+  <teleportAngle>45</teleportAngle>
+  <frameStepMax>0.25</frameStepMax>
+  <seekTolerance>0.1</seekTolerance>
+  <windowX>-1</windowX>
+  <windowY>-1</windowY>
+  <windowWidth>420</windowWidth>
+  <windowHeight>600</windowHeight>
+  <uiScale>1</uiScale>
+</HaloFollow>

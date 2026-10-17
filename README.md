@@ -1,6 +1,6 @@
 # COM3D2.HaloFollow.Plugin
 
-COM3D2 / COM3D2.5 で、頭に固定されたヘイローなどの装備を、頭の動きに少し遅れて滑らかに追従させる BepInEx プラグインです。ヘイローは基準位置を中心に、いつも小さく上下に浮遊します。
+COM3D2 / COM3D2.5 で、頭に固定されたヘイローなどの装備を、頭の動きに少し遅れて滑らかに追従させる UnityInjector プラグインです。ヘイローは基準位置を中心に、いつも小さく上下に浮遊します。
 
 - ヘイローは一つの剛体として動きます。輪の形・大きさ・材質・描画設定は変わりません
 - 追従させる装備は、メイドごとにスロット（帽子なら `accHat`）で指定し、設定もメイドごとに保存します
@@ -11,23 +11,26 @@ COM3D2 / COM3D2.5 で、頭に固定されたヘイローなどの装備を、�
 
 ## 導入
 
-1. BepInEx 5 が導入済みの COM3D2 または COM3D2.5 を用意します
-2. zip を解凍し、お使いのゲームのフォルダ（`COM3D2` か `COM3D2.5`）の中身をゲームのフォルダへコピーします。COM3D2 と COM3D2.5 で dll が異なるため、もう片方は使いません
-   - COM3D2: `COM3D2\BepInEx\plugins\COM3D2.HaloFollow.dll` が `COM3D2\BepInEx\plugins\` に入ります
-   - COM3D2.5: `COM3D2.5\BepInEx\plugins\COM3D2.HaloFollow.dll` が `COM3D2.5\BepInEx\plugins\` に入ります
+1. UnityInjector（Sybaris、または BepInEx の UnityInjectorLoader）が導入済みの COM3D2 または COM3D2.5 を用意します
+2. zip を解凍し、お使いのゲームに合うフォルダの中身を `Sybaris\UnityInjector\` へコピーします。COM3D2 と COM3D2.5 で dll が異なります
+   - COM3D2: `UnityInjector\COM3D2.HaloFollow.Plugin.dll`
+   - COM3D2.5: `UnityInjector (COM3D2.5)\COM3D2.HaloFollow.Plugin.dll`
+   - 以前の BepInEx 版を入れていた場合は、`BepInEx\plugins\COM3D2.HaloFollow.dll` を削除します。残すと二重に動きます
 3. ゲームを起動し、ヘイローを装備したメイドを表示します
+
+衣装の着替えの検知に Harmony（BepInEx 同梱の `0Harmony.dll`）を使います。BepInEx が無い COM3D2 でも動きますが、着替え後の再検出が最大 1 秒遅れます。
 4. 設定ウィンドウの「追従」タブで、メイドとヘイローのスロット（帽子なら `accHat`）を選び、「このスロットを追従させる」を ON にします
 
 ## 解除
 
-1. `BepInEx\plugins\COM3D2.HaloFollow.dll` を削除します
-2. 設定も消す場合は、`BepInEx\config\com.kidonaru.com3d2.halofollow.cfg` と `BepInEx\config\HaloFollow\` フォルダを削除します
+1. `Sybaris\UnityInjector\COM3D2.HaloFollow.Plugin.dll` を削除します
+2. 設定も消す場合は、`Sybaris\UnityInjector\Config\HaloFollow.xml` と `Sybaris\UnityInjector\Config\HaloFollow\` フォルダを削除します
 
 モデルファイルは変更していないため、ほかに戻す作業はありません。
 
 ## 操作
 
-ギアメニューの「HaloFollow」ボタンか `Ctrl + Shift + H` で、設定ウィンドウを開閉します（キーは設定ファイルの `WindowShortcut` で変更できます）。
+ギアメニューの「HaloFollow」ボタンか `Ctrl + Shift + H` で、設定ウィンドウを開閉します（キーは全体の設定ファイルの `windowShortcut` で変更できます。書式は `Ctrl+Shift+H` のように修飾キーとキー名を `+` でつなぎます）。
 
 SceneEditor が入っていると、設定ウィンドウは SceneEditor のウィンドウと連携します。
 
@@ -50,7 +53,7 @@ SceneEditor が無い場合は、独立したウィンドウとして動きま�
    - 体そのもののスロット（body・head など）は候補に出ません
    - 開いたときは、設定済みのスロット（無ければ `accHat`）が選ばれています
 3. **このスロットを追従させる**: ON にすると、そのスロットの設定を作って追従を始め、下に設定欄が出ます。OFF は設定を残したまま止めます（OFF 中も設定欄は出て、編集・削除できます）
-   - 右に状態が出ます（追従中 / 未装備 / 追従できない / OFF / 全体 OFF）。「追従できない」は、選んだボーンが装備に無いなどの理由で、詳しくは BepInEx のログに出ます
+   - 右に状態が出ます（追従中 / 未装備 / 追従できない / OFF / 全体 OFF）。「追従できない」は、選んだボーンが装備に無いなどの理由で、詳しくはゲームのログに出ます
 4. **追従ボーン**: モデルが頭に付くためのボーンを、そのスロットのメッシュが参照するボーンから選びます。既定は `Headset` です
 5. 追従・浮遊・陰影・オフセットのスライダー（項目は下の「メイドごとの設定」）。右の「R」は 1 項目だけを既定値に戻します
 6. **初期値に戻す**: 全項目を既定値に戻します（既定のボーン Headset が装備に無いときは、ボーンだけ今のまま残します）
@@ -74,17 +77,19 @@ SceneEditor が無い場合は、独立したウィンドウとして動きま�
 - **UI 倍率 %**: ウィンドウの拡大率です。SceneEditor がある間は SceneEditor の設定を書き換えます
 - 開閉キーと、検出中の装備の一覧を表示します
 
-設定はゲームを再起動せずに反映されます。メイドごとの設定は最後の変更から 1 秒後に保存されます。
+変更はゲームを再起動せずに反映され、最後の変更から 1 秒後に保存されます。
 
 ## 保存先
 
 | 内容 | 場所 |
 | --- | --- |
-| メイドごとの設定 | `BepInEx\config\HaloFollow\Maids\<メイドの guid>.xml` |
-| プリセット | `BepInEx\config\HaloFollow\Presets\<名前>.xml` |
-| 全体の設定（有効化・判定・ウィンドウ） | `BepInEx\config\com.kidonaru.com3d2.halofollow.cfg` |
+| メイドごとの設定 | `Sybaris\UnityInjector\Config\HaloFollow\Maids\<メイドの guid>.xml` |
+| プリセット | `Sybaris\UnityInjector\Config\HaloFollow\Presets\<名前>.xml` |
+| 全体の設定（有効化・開閉キー・判定・ウィンドウ） | `Sybaris\UnityInjector\Config\HaloFollow.xml` |
 
-- 読めない設定ファイルは `.bak` へ退避し、そのメイドは設定なしで始めます
+BepInEx 版（0.1.0 の開発版）の `BepInEx\config\` の設定は引き継ぎません。
+
+- 読めない設定ファイルは `.bak` へ退避し、既定値（メイドの設定なら設定なし）で始めます
 - 同じ guid のメイドが 2 人いる場合は、設定を共有します
 
 ## 設定項目
@@ -109,23 +114,25 @@ SceneEditor が無い場合は、独立したウィンドウとして動きま�
 
 距離（cm）は頭のスケールに合わせて換算します。体型スライダーで頭を大きくすると、ずれの上限や振幅も同じ比率で大きくなります。
 
-### 判定（`[Detection]`、全メイド共通）
+### 判定（全体の設定、全メイド共通）
 
 | 項目 | 既定値 | 内容 |
 | --- | --- | --- |
-| TeleportDistanceCm / TeleportAngle | 20 cm / 45 度 | 1 フレームでこれ以上動き、その速さが毎秒 300 cm / 1000 度を超えたら瞬間移動として即座に合わせる（低 fps のコマ送りは瞬間移動とみなさない） |
-| FrameStepMax | 0.25 秒 | 一時停止中にモーション時刻がこの秒数以下だけ進んだらコマ送りとして扱う |
-| SeekTolerance | 0.1 秒 | 再生中にモーション時刻が想定よりこれ以上進んだらシークとして扱う |
+| teleportDistanceCm / teleportAngle | 20 cm / 45 度 | 1 フレームでこれ以上動き、その速さが毎秒 300 cm / 1000 度を超えたら瞬間移動として即座に合わせる（低 fps のコマ送りは瞬間移動とみなさない） |
+| frameStepMax | 0.25 秒 | 一時停止中にモーション時刻がこの秒数以下だけ進んだらコマ送りとして扱う |
+| seekTolerance | 0.1 秒 | 再生中にモーション時刻が想定よりこれ以上進んだらシークとして扱う |
 
-設定例は `config-example/com.kidonaru.com3d2.halofollow.cfg` にあります。
+範囲外の値は読み込み時に範囲へ丸めます。設定例は `config-example/HaloFollow.xml` にあります。
 
-### ウィンドウ（`[Window]`）
+### ウィンドウ・その他（全体の設定）
 
 | 項目 | 既定値 | 内容 |
 | --- | --- | --- |
-| X / Y | -1 | ウィンドウの位置（画面のピクセル）。負の値は画面中央 |
-| Width / Height | 420 / 600 | ウィンドウの大きさ（画面のピクセル。UI 倍率をかけた後の実サイズ） |
-| UIScale | 1 | UI 倍率（0.8〜2）。SceneEditor がある間は SceneEditor の倍率に従う |
+| enabled | true | ヘイロー追従全体の有効化 |
+| windowShortcut | Ctrl+Shift+H | 設定ウィンドウの開閉キー。読めない値は既定に戻す |
+| windowX / windowY | -1 | ウィンドウの位置（画面のピクセル）。負の値は画面中央 |
+| windowWidth / windowHeight | 420 / 600 | ウィンドウの大きさ（画面のピクセル。UI 倍率をかけた後の実サイズ） |
+| uiScale | 1 | UI 倍率（0.8〜2）。SceneEditor がある間は SceneEditor の倍率に従う |
 
 ## ビルド
 
