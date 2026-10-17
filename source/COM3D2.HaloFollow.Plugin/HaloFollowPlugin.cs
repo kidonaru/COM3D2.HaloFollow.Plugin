@@ -1,23 +1,25 @@
 using System.IO;
-using BepInEx;
-using BepInEx.Logging;
+using System.Reflection;
 using COM3D2.MotionTimelineEditor;
-using HarmonyLib;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityInjector;
+using UnityInjector.Attributes;
 
 namespace COM3D2.HaloFollow.Plugin
 {
     /// <summary>
     /// 頭に固定されたヘイローを、頭の動きに少し遅れて追従させ、上下に浮遊させる
     /// </summary>
-    [BepInPlugin(PluginInfo.PluginGuid, PluginInfo.PluginFullName, PluginInfo.PluginVersion)]
-    public class HaloFollowPlugin : BaseUnityPlugin
+    [
+        PluginFilter("COM3D2x64"),
+        PluginName(PluginInfo.PluginFullName),
+        PluginVersion(PluginInfo.PluginVersion)
+    ]
+    public class HaloFollowPlugin : PluginBase
     {
         private const int MissedTickFrames = 2;
         private const int MaxReinstallCount = 3;
-
-        internal static ManualLogSource Log;
 
         private HaloFollowConfig _config;
         private HaloFollowRegistry _registry;
@@ -26,46 +28,26 @@ namespace COM3D2.HaloFollow.Plugin
         private WindowManager _windowManager;
         private bool _windowInitFailed;
         private GearIconButton _gearButton;
-        private Harmony _harmony;
         private bool _hooked;
         private int _reinstallCount;
 
         private void Awake()
         {
-            Log = Logger;
-            var dataRoot = Path.Combine(Paths.ConfigPath, PluginInfo.PluginName);
-            _config = new HaloFollowConfig(Path.Combine(dataRoot, PluginInfo.PluginName + ".xml"), m => Log.LogWarning(m));
-            _store = new MaidSettingsStore(Path.Combine(dataRoot, "Maids"), m => Log.LogWarning(m));
+            var configDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Config");
+            var dataRoot = Path.Combine(configDir, PluginInfo.PluginName);
+            _config = new HaloFollowConfig(Path.Combine(configDir, PluginInfo.PluginName + ".xml"), PluginLog.Warning);
+            _store = new MaidSettingsStore(Path.Combine(dataRoot, "Maids"), PluginLog.Warning);
             // メイドの設定と同じフォルダに置くと、guid のファイルとプリセット名のファイルが混ざる
-            _presets = new PresetStore<HaloPreset>(Path.Combine(dataRoot, "Presets"), "プリセット", m => Log.LogWarning(m));
-            _registry = new HaloFollowRegistry(_config, _store, m => Log.LogInfo(m), m => Log.LogError(m));
+            _presets = new PresetStore<HaloPreset>(Path.Combine(dataRoot, "Presets"), "プリセット", PluginLog.Warning);
+            _registry = new HaloFollowRegistry(_config, _store, PluginLog.Info, PluginLog.Error);
             _config.EnabledChanged += _registry.RequestRescan;
-            _gearButton = new GearIconButton(Log);
+            _gearButton = new GearIconButton(PluginLog.Warning);
 
-            // パッチの失敗で Awake ごと止めると、1 秒ごとの再検出で代わりが利くのに追従全体が動かなくなる
-            _harmony = new Harmony(PluginInfo.PluginGuid);
-            try
-            {
-                _harmony.PatchAll(typeof(ProcPropPatch));
-            }
-            catch (System.Exception e)
-            {
-                Log.LogWarning("衣装適用の検知パッチを当てられませんでした。着替え後の再検出が最大 1 秒遅れます: " + e.Message);
-            }
-#if !COM3D25
-            try
-            {
-                _harmony.PatchAll(typeof(ForceUpdateCanvasesPatch));
-            }
-            catch (System.Exception e)
-            {
-                Log.LogWarning("キャンバスの強制更新の検知パッチを当てられませんでした。uGUI の操作中は頭の最終姿勢より前に動くことがあります: " + e.Message);
-            }
-#endif
+            HarmonyPatcher.TryApply(PluginLog.Warning);
             _hooked = PlayerLoopHook.Install(_registry.Tick);
             if (!_hooked)
             {
-                Log.LogWarning("PlayerLoop へ差し込めなかったため LateUpdate で更新します。頭の最終姿勢より前に動くことがあります");
+                PluginLog.Warning("PlayerLoop へ差し込めなかったため LateUpdate で更新します。頭の最終姿勢より前に動くことがあります");
             }
 
             SceneManager.sceneLoaded += OnSceneLoaded;
@@ -111,7 +93,7 @@ namespace COM3D2.HaloFollow.Plugin
             Application.quitting -= OnQuitting;
 #endif
             PlayerLoopHook.Uninstall();
-            _harmony?.UnpatchSelf();
+            HarmonyPatcher.Remove();
             _registry.ReleaseAll();
             // 全体設定の保存が例外を出しても、まだ書いていないメイドの設定を失わないよう先に書く
             _store.FlushAll();
@@ -123,7 +105,7 @@ namespace COM3D2.HaloFollow.Plugin
             }
             catch (System.Exception e)
             {
-                Log.LogWarning("設定ウィンドウの後片付けに失敗しました: " + e.Message);
+                PluginLog.Warning("設定ウィンドウの後片付けに失敗しました: " + e.Message);
             }
         }
 
@@ -149,10 +131,10 @@ namespace COM3D2.HaloFollow.Plugin
             {
                 _hooked = false;
                 PlayerLoopHook.Uninstall();
-                Log.LogWarning("PlayerLoop の差し込みが維持できないため LateUpdate で更新します。頭の最終姿勢より前に動くことがあります");
+                PluginLog.Warning("PlayerLoop の差し込みが維持できないため LateUpdate で更新します。頭の最終姿勢より前に動くことがあります");
                 return;
             }
-            Log.LogWarning("PlayerLoop の差し込みが外れていたため差し込み直しました");
+            PluginLog.Warning("PlayerLoop の差し込みが外れていたため差し込み直しました");
         }
 
         /// <summary>
@@ -177,7 +159,7 @@ namespace COM3D2.HaloFollow.Plugin
             {
                 // UI が無くても追従は設定ファイルの値で続けられるよう、UI だけを諦める
                 _windowInitFailed = true;
-                Log.LogError("設定ウィンドウを作れないため UI なしで動作します: " + e);
+                PluginLog.Error("設定ウィンドウを作れないため UI なしで動作します: " + e);
                 return false;
             }
         }

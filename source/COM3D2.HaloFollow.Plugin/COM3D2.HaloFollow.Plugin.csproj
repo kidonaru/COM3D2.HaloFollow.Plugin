@@ -2,7 +2,7 @@
   <PropertyGroup>
     <!-- net35 は COM3D2 (Unity 5.6)、net471 は COM3D2.5 (Unity 2022) 向け。build.bat が -f で選んでビルドする -->
     <TargetFrameworks>net35;net471</TargetFrameworks>
-    <AssemblyName>COM3D2.HaloFollow</AssemblyName>
+    <AssemblyName>COM3D2.HaloFollow.Plugin</AssemblyName>
     <RootNamespace>COM3D2.HaloFollow.Plugin</RootNamespace>
     <LangVersion>7.3</LangVersion>
     <!-- バージョンの単一ソースは PluginInfo.cs（bump-version.bat が書き換える） -->
@@ -74,10 +74,13 @@
       <HintPath>$(ManagedDir)\Assembly-CSharp-firstpass.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <Reference Include="BepInEx">
-      <HintPath>$(GameDir)\BepInEx\core\BepInEx.dll</HintPath>
+    <!-- UnityInjector.dll は COM3D2.5 側に実体がない (BepInEx.UnityInjectorLoader がランタイム提供)
+         ため、どちらのビルドでも COM3D2 側の DLL を参照する -->
+    <Reference Include="UnityInjector">
+      <HintPath>$(COM3D2_DIR)\Sybaris\lib\UnityInjector.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <!-- HarmonyX。BepInEx 同梱の 0Harmony を参照する（無い環境では HarmonyPatcher がパッチを諦める） -->
     <Reference Include="0Harmony">
       <HintPath>$(GameDir)\BepInEx\core\0Harmony.dll</HintPath>
       <Private>false</Private>

@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Reflection;
-using BepInEx.Logging;
 using COM3D2.MotionTimelineEditor;
 using UnityEngine;
 
@@ -12,15 +11,15 @@ namespace COM3D2.HaloFollow.Plugin
     {
         private const string IconResourceName = "gear_icon.png";
 
-        private readonly ManualLogSource _log;
+        private readonly Action<string> _warn;
         private GameObject _icon;
         private bool? _shownVisible;
         private byte[] _iconPng;
         private bool _iconPngLoaded;
 
-        public GearIconButton(ManualLogSource log)
+        public GearIconButton(Action<string> warn)
         {
-            _log = log;
+            _warn = warn;
         }
 
         /// <summary>毎フレーム呼ぶ。visible はウィンドウの表示状態で、枠の色に出す</summary>
@@ -50,7 +49,7 @@ namespace COM3D2.HaloFollow.Plugin
             {
                 if (stream == null)
                 {
-                    _log.LogWarning("埋め込みリソース " + IconResourceName + " が見つかりません。システムアイコンで表示します");
+                    _warn("埋め込みリソース " + IconResourceName + " が見つかりません。システムアイコンで表示します");
                     return null;
                 }
                 // Stream.Read 1 回では要求した長さを読み切る保証がなく、Stream.CopyTo は .NET 3.5 (COM3D2) に無い
