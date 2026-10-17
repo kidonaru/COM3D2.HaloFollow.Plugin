@@ -10,5 +10,6 @@ output/
 
 # ビルド成果物。build.bat が毎回生成するため追跡しない
 BepInEx/plugins/*.dll
+BepInEx25/plugins/*.dll
 
 .superpowers/

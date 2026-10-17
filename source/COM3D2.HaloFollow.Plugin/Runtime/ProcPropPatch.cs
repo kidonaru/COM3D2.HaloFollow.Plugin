@@ -9,14 +9,21 @@ namespace COM3D2.HaloFollow.Plugin
     /// </summary>
     internal static class ProcPropPatch
     {
-        [HarmonyPatch(typeof(Maid), "AllProcPropSeqIn")]
+#if COM3D25
+        private const string SeqInMethod = "AllProcPropSeqIn";
+#else
+        // AllProcPropSeqIn を指定すると、COM3D2 には無くパッチが当たらない。同じ処理は AllProcPropSeq が直接持つ
+        private const string SeqInMethod = "AllProcPropSeq";
+#endif
+
+        [HarmonyPatch(typeof(Maid), SeqInMethod)]
         [HarmonyPrefix]
         private static void SeqInPrefix(Maid __instance, out bool __state)
         {
             __state = __instance.boAllProcPropBUSY;
         }
 
-        [HarmonyPatch(typeof(Maid), "AllProcPropSeqIn")]
+        [HarmonyPatch(typeof(Maid), SeqInMethod)]
         [HarmonyPostfix]
         private static void SeqInPostfix(Maid __instance, bool __state)
         {

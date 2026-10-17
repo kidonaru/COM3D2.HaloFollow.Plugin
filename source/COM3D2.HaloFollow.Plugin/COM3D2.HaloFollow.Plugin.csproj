@@ -1,20 +1,31 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net471</TargetFramework>
+    <!-- net35 は COM3D2 (Unity 5.6)、net471 は COM3D2.5 (Unity 2022) 向け。build.bat が -f で選んでビルドする -->
+    <TargetFrameworks>net35;net471</TargetFrameworks>
     <AssemblyName>COM3D2.HaloFollow</AssemblyName>
     <RootNamespace>COM3D2.HaloFollow.Plugin</RootNamespace>
     <LangVersion>7.3</LangVersion>
     <!-- バージョンの単一ソースは PluginInfo.cs（bump-version.bat が書き換える） -->
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <!-- ゲームのインストール先。build.bat が .env から /p:COM3D25_DIR= で渡す -->
+    <!-- ゲームのインストール先。build.bat が .env から /p:COM3D2_DIR= /p:COM3D25_DIR= で渡す -->
+    <COM3D2_DIR Condition=" '$(COM3D2_DIR)' == '' ">W:\COM3D2</COM3D2_DIR>
     <COM3D25_DIR Condition=" '$(COM3D25_DIR)' == '' ">W:\COM3D2_5</COM3D25_DIR>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net35' ">
+    <GameDir>$(COM3D2_DIR)</GameDir>
+    <DefineConstants>$(DefineConstants);COM3D2</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' ">
     <GameDir>$(COM3D25_DIR)</GameDir>
+    <DefineConstants>$(DefineConstants);COM3D25</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup>
     <ManagedDir>$(GameDir)\COM3D2x64_Data\Managed</ManagedDir>
   </PropertyGroup>
   <ItemGroup>
     <!-- MTEUtils (submodule) から、ギアメニューとドッキング対応ウィンドウ一式だけをリンクする。
          MTEUtils は利用側が明示列挙する前提のため glob にしない。依存が増えたら CS0246 の型のファイルを足す -->
     <Compile Include="..\..\MTEUtils\GearMenu.cs" Link="MTEUtils\GearMenu.cs" />
+    <Compile Include="..\..\MTEUtils\BodySlotUtils.cs" Link="MTEUtils\BodySlotUtils.cs" />
     <Compile Include="..\..\MTEUtils\ColorExtensions.cs" Link="MTEUtils\ColorExtensions.cs" />
     <Compile Include="..\..\MTEUtils\ColorPickerWindow.cs" Link="MTEUtils\ColorPickerWindow.cs" />
     <Compile Include="..\..\MTEUtils\ComboBoxPopupWindow.cs" Link="MTEUtils\ComboBoxPopupWindow.cs" />
@@ -58,6 +69,21 @@
       <HintPath>$(ManagedDir)\UnityEngine.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>$(ManagedDir)\Assembly-CSharp-firstpass.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="BepInEx">
+      <HintPath>$(GameDir)\BepInEx\core\BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(GameDir)\BepInEx\core\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <!-- COM3D2.5 (Unity 2022) では UnityEngine がモジュール分割されているため個別参照が必要 -->
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net471' ">
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>$(ManagedDir)\UnityEngine.CoreModule.dll</HintPath>
       <Private>false</Private>
@@ -74,24 +100,12 @@
       <HintPath>$(ManagedDir)\UnityEngine.InputLegacyModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>$(ManagedDir)\Assembly-CSharp-firstpass.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
     <Reference Include="UnityEngine.TextRenderingModule">
       <HintPath>$(ManagedDir)\UnityEngine.TextRenderingModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.ImageConversionModule">
       <HintPath>$(ManagedDir)\UnityEngine.ImageConversionModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="BepInEx">
-      <HintPath>$(GameDir)\BepInEx\core\BepInEx.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="0Harmony">
-      <HintPath>$(GameDir)\BepInEx\core\0Harmony.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

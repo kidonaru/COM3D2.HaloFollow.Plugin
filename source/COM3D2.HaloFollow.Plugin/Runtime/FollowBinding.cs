@@ -40,12 +40,14 @@ namespace COM3D2.HaloFollow.Plugin
         /// </summary>
         public static FollowBinding TryCreate(Maid maid, TBodySkin skin, SlotSettings entry, out string failureReason)
         {
+#if COM3D25
             // ゲームのボーンルートアタッチは bones の名前でコピー階層を引き直すため、代理名が混ざると例外になる
             if (skin.m_attachType == TBodySkin.ATTACH_TYPE.BONE_ROOT)
             {
                 failureReason = "ボーンルートにアタッチした装備は追従の対象外です";
                 return null;
             }
+#endif
 
             var obj = skin.obj;
             var boneName = entry.param.boneName;

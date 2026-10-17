@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using COM3D2.MotionTimelineEditor;
 using UnityEngine;
 
 namespace COM3D2.HaloFollow.Plugin
@@ -57,14 +58,15 @@ namespace COM3D2.HaloFollow.Plugin
             {
                 return;
             }
-            var slots = maid.body0.goSlot;
-            for (var slotNo = 0; slotNo < slots.Count; slotNo++)
+            var body = maid.body0;
+            var slotCount = BodySlotUtils.GetSlotCount(body);
+            for (var slotNo = 0; slotNo < slotCount; slotNo++)
             {
                 // サブスロットだけが装備されている場合も候補に出すため、親だけでなく全サブスロットを見る
-                var children = slots.CountChildren(slotNo);
+                var children = BodySlotUtils.GetChildCount(body, slotNo);
                 for (var subNo = 0; subNo < children; subNo++)
                 {
-                    var skin = slots[slotNo, subNo];
+                    var skin = BodySlotUtils.GetSlot(body, slotNo, subNo);
                     if (skin == null || skin.obj == null || string.IsNullOrEmpty(skin.Category) || BodySlots.Contains(skin.Category))
                     {
                         continue;
@@ -87,13 +89,14 @@ namespace COM3D2.HaloFollow.Plugin
             {
                 return;
             }
-            var slots = maid.body0.goSlot;
-            for (var slotNo = 0; slotNo < slots.Count; slotNo++)
+            var body = maid.body0;
+            var slotCount = BodySlotUtils.GetSlotCount(body);
+            for (var slotNo = 0; slotNo < slotCount; slotNo++)
             {
-                var children = slots.CountChildren(slotNo);
+                var children = BodySlotUtils.GetChildCount(body, slotNo);
                 for (var subNo = 0; subNo < children; subNo++)
                 {
-                    var skin = slots[slotNo, subNo];
+                    var skin = BodySlotUtils.GetSlot(body, slotNo, subNo);
                     if (skin == null || skin.obj == null || !SlotMatcher.Matches(slot, skin.Category))
                     {
                         continue;

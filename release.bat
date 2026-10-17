@@ -5,7 +5,7 @@ setlocal
 set PLUGIN_NAME=COM3D2.HaloFollow.Plugin
 set ASSEMBLY_NAME=COM3D2.HaloFollow
 
-call .\source\%PLUGIN_NAME%\build.bat release
+call .\source\%PLUGIN_NAME%\build.bat release all
 if %ERRORLEVEL% neq 0 (
     echo ビルドに失敗しました
     exit /b 1
@@ -20,11 +20,19 @@ echo VERSION: %VERSION%
 
 if exist output rmdir /s /q output
 
-rem ============ 配布パッケージ (ゲームのルートに解凍する構成) ============
-md output\%PLUGIN_NAME%\BepInEx\plugins
-copy /y "BepInEx\plugins\%ASSEMBLY_NAME%.dll" "output\%PLUGIN_NAME%\BepInEx\plugins\" >nul
+rem ============ COM3D2 版 / COM3D2.5 版を同梱したパッケージ ============
+rem 片方をゲームのルートに解凍する構成にすると、従来どおりルートへ上書きした利用者に違うゲームの dll が入る
+md output\%PLUGIN_NAME%\COM3D2\BepInEx\plugins
+copy /y "BepInEx\plugins\%ASSEMBLY_NAME%.dll" "output\%PLUGIN_NAME%\COM3D2\BepInEx\plugins\" >nul
 if %ERRORLEVEL% neq 0 (
-    echo dll のコピーに失敗しました
+    echo COM3D2 版 dll のコピーに失敗しました
+    exit /b 1
+)
+
+md output\%PLUGIN_NAME%\COM3D2.5\BepInEx\plugins
+copy /y "BepInEx25\plugins\%ASSEMBLY_NAME%.dll" "output\%PLUGIN_NAME%\COM3D2.5\BepInEx\plugins\" >nul
+if %ERRORLEVEL% neq 0 (
+    echo COM3D2.5 版 dll のコピーに失敗しました
     exit /b 1
 )
 

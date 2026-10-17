@@ -1,6 +1,6 @@
 # COM3D2.HaloFollow.Plugin
 
-COM3D2.5 で、頭に固定されたヘイローなどの装備を、頭の動きに少し遅れて滑らかに追従させる BepInEx プラグインです。ヘイローは基準位置を中心に、いつも小さく上下に浮遊します。
+COM3D2 / COM3D2.5 で、頭に固定されたヘイローなどの装備を、頭の動きに少し遅れて滑らかに追従させる BepInEx プラグインです。ヘイローは基準位置を中心に、いつも小さく上下に浮遊します。
 
 - ヘイローは一つの剛体として動きます。輪の形・大きさ・材質・描画設定は変わりません
 - 追従させる装備は、メイドごとにスロット（帽子なら `accHat`）で指定し、設定もメイドごとに保存します
@@ -11,8 +11,10 @@ COM3D2.5 で、頭に固定されたヘイローなどの装備を、頭の動�
 
 ## 導入
 
-1. BepInEx 5 が導入済みの COM3D2.5 を用意します
-2. `COM3D2.HaloFollow.dll` を `COM3D2.5\BepInEx\plugins\` に置きます
+1. BepInEx 5 が導入済みの COM3D2 または COM3D2.5 を用意します
+2. zip を解凍し、お使いのゲームのフォルダ（`COM3D2` か `COM3D2.5`）の中身をゲームのフォルダへコピーします。COM3D2 と COM3D2.5 で dll が異なるため、もう片方は使いません
+   - COM3D2: `COM3D2\BepInEx\plugins\COM3D2.HaloFollow.dll` が `COM3D2\BepInEx\plugins\` に入ります
+   - COM3D2.5: `COM3D2.5\BepInEx\plugins\COM3D2.HaloFollow.dll` が `COM3D2.5\BepInEx\plugins\` に入ります
 3. ゲームを起動し、ヘイローを装備したメイドを表示します
 4. 設定ウィンドウの「追従」タブで、メイドとヘイローのスロット（帽子なら `accHat`）を選び、「このスロットを追従させる」を ON にします
 
@@ -127,7 +129,7 @@ SceneEditor が無い場合は、独立したウィンドウとして動きま�
 
 ## ビルド
 
-UI の部品に [COM3D2.MTEUtils](https://github.com/kidonaru/COM3D2.MTEUtils) をサブモジュールとして使っています。クローン後に取得してから `debug.bat` / `release.bat` でビルドします。
+UI の部品に [COM3D2.MTEUtils](https://github.com/kidonaru/COM3D2.MTEUtils) をサブモジュールとして使っています。クローン後に取得し、`.env.sample` をコピーした `.env` に COM3D2 と COM3D2.5 のインストール先（`COM3D2_DIR` / `COM3D25_DIR`）を書いてから、`debug.bat` / `release.bat` でビルドします。`debug.bat com3d2` / `debug.bat com3d25` で片方だけビルドできます。
 
 ```
 git submodule update --init

@@ -53,12 +53,8 @@ namespace COM3D2.HaloFollow.Plugin
                     _log.LogWarning("埋め込みリソース " + IconResourceName + " が見つかりません。システムアイコンで表示します");
                     return null;
                 }
-                // Stream.Read 1 回では要求した長さを読み切る保証がない
-                using (var memory = new MemoryStream())
-                {
-                    stream.CopyTo(memory);
-                    _iconPng = memory.ToArray();
-                }
+                // Stream.Read 1 回では要求した長さを読み切る保証がなく、Stream.CopyTo は .NET 3.5 (COM3D2) に無い
+                _iconPng = new BinaryReader(stream).ReadBytes((int)stream.Length);
             }
             return _iconPng;
         }

@@ -43,14 +43,25 @@ namespace COM3D2.HaloFollow.Plugin
             _gearButton = new GearIconButton(Log);
 
             // パッチの失敗で Awake ごと止めると、1 秒ごとの再検出で代わりが利くのに追従全体が動かなくなる
+            _harmony = new Harmony(PluginInfo.PluginGuid);
             try
             {
-                _harmony = Harmony.CreateAndPatchAll(typeof(ProcPropPatch));
+                _harmony.PatchAll(typeof(ProcPropPatch));
             }
             catch (System.Exception e)
             {
                 Log.LogWarning("衣装適用の検知パッチを当てられませんでした。着替え後の再検出が最大 1 秒遅れます: " + e.Message);
             }
+#if !COM3D25
+            try
+            {
+                _harmony.PatchAll(typeof(ForceUpdateCanvasesPatch));
+            }
+            catch (System.Exception e)
+            {
+                Log.LogWarning("キャンバスの強制更新の検知パッチを当てられませんでした。uGUI の操作中は頭の最終姿勢より前に動くことがあります: " + e.Message);
+            }
+#endif
             _hooked = PlayerLoopHook.Install(_registry.Tick);
             if (!_hooked)
             {
@@ -58,7 +69,9 @@ namespace COM3D2.HaloFollow.Plugin
             }
 
             SceneManager.sceneLoaded += OnSceneLoaded;
+#if COM3D25
             Application.quitting += OnQuitting;
+#endif
         }
 
         private void Update()
@@ -94,7 +107,9 @@ namespace COM3D2.HaloFollow.Plugin
         private void OnDestroy()
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
+#if COM3D25
             Application.quitting -= OnQuitting;
+#endif
             PlayerLoopHook.Uninstall();
             _harmony?.UnpatchSelf();
             _registry.ReleaseAll();
@@ -182,6 +197,14 @@ namespace COM3D2.HaloFollow.Plugin
                 _registry.OnSceneLoaded();
             }
         }
+
+#if !COM3D25
+        // Application.quitting は Unity 5.6 (COM3D2) に無いため、マジックメソッドで受ける
+        private void OnApplicationQuit()
+        {
+            OnQuitting();
+        }
+#endif
 
         private void OnQuitting()
         {

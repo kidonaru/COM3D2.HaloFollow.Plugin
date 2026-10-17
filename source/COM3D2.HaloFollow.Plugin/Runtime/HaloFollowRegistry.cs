@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using COM3D2.MotionTimelineEditor;
 using UnityEngine;
 
 namespace COM3D2.HaloFollow.Plugin
@@ -28,6 +30,7 @@ namespace COM3D2.HaloFollow.Plugin
         private readonly Action<string> _logInfo;
         private readonly MaidClockTracker _clocks;
         private readonly List<FollowBinding> _bindings = new List<FollowBinding>();
+        private readonly ReadOnlyCollection<FollowBinding> _readOnlyBindings;
         private readonly HashSet<TBodySkin> _foundSkins = new HashSet<TBodySkin>();
         private readonly HashSet<Maid> _activeMaids = new HashSet<Maid>();
         private readonly HashSet<string> _failedKeys = new HashSet<string>();
@@ -44,11 +47,13 @@ namespace COM3D2.HaloFollow.Plugin
             _logInfo = logInfo;
             _logError = logError;
             _clocks = new MaidClockTracker(config);
+            _readOnlyBindings = _bindings.AsReadOnly();
         }
 
-        public IReadOnlyList<FollowBinding> Bindings
+        // IReadOnlyList にすると .NET 3.5 (COM3D2) でビルドできない。参照のたびに AsReadOnly すると OnGUI ごとに確保する
+        public ReadOnlyCollection<FollowBinding> Bindings
         {
-            get { return _bindings; }
+            get { return _readOnlyBindings; }
         }
 
         /// <summary>最後に Tick したフレーム（PlayerLoop の差し込みが外れたことの検知に使う）</summary>
@@ -253,14 +258,15 @@ namespace COM3D2.HaloFollow.Plugin
             {
                 return;
             }
-            var slots = maid.body0.goSlot;
-            for (var slotNo = 0; slotNo < slots.Count; slotNo++)
+            var body = maid.body0;
+            var slotCount = BodySlotUtils.GetSlotCount(body);
+            for (var slotNo = 0; slotNo < slotCount; slotNo++)
             {
                 // CRC のサブスロット（subNo > 0）は親と同じ Category を持つため、まとめて対象にする
-                var children = slots.CountChildren(slotNo);
+                var children = BodySlotUtils.GetChildCount(body, slotNo);
                 for (var subNo = 0; subNo < children; subNo++)
                 {
-                    var skin = slots[slotNo, subNo];
+                    var skin = BodySlotUtils.GetSlot(body, slotNo, subNo);
                     if (skin == null || skin.obj == null)
                     {
                         continue;

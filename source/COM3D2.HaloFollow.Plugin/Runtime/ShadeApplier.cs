@@ -12,8 +12,10 @@ namespace COM3D2.HaloFollow.Plugin
     {
         private static readonly int ShadeStrengthId = Shader.PropertyToID("_ShadeStrength");
         private static readonly MaterialPropertyBlock Block = new MaterialPropertyBlock();
+#if COM3D25
         // sharedMaterials は呼ぶたびに配列を確保するため、使い回すリストへ取る
         private static readonly List<Material> Materials = new List<Material>();
+#endif
 
         private readonly Renderer[] _renderers;
         private readonly bool[] _hadBlock;
@@ -52,8 +54,14 @@ namespace COM3D2.HaloFollow.Plugin
                 renderer.GetPropertyBlock(Block);
                 if (!_applied.HasValue)
                 {
+#if COM3D25
                     _hadBlock[i] = renderer.HasPropertyBlock();
                     _hadShade[i] = _hadBlock[i] && Block.HasFloat(ShadeStrengthId);
+#else
+                    // Unity 5.6 には HasFloat が無く、未設定と 0 を区別できないため、0 は未設定として扱う
+                    _hadBlock[i] = !Block.isEmpty;
+                    _hadShade[i] = _hadBlock[i] && Block.GetFloat(ShadeStrengthId) != 0f;
+#endif
                     _previousShade[i] = _hadShade[i] ? Block.GetFloat(ShadeStrengthId) : 0f;
                 }
                 Block.SetFloat(ShadeStrengthId, shade.Value);
@@ -100,8 +108,14 @@ namespace COM3D2.HaloFollow.Plugin
 
         private static bool TryGetMaterialShade(Renderer renderer, out float value)
         {
+#if COM3D25
             renderer.GetSharedMaterials(Materials);
-            foreach (var material in Materials)
+            var materials = Materials;
+#else
+            // GetSharedMaterials(List) は Unity 5.6 に無い。外すときにしか呼ばないため、配列の確保は許容する
+            var materials = renderer.sharedMaterials;
+#endif
+            foreach (var material in materials)
             {
                 if (material != null && material.HasProperty(ShadeStrengthId))
                 {

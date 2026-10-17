@@ -1,3 +1,4 @@
+#if COM3D25
 using System.Collections.Generic;
 using UnityEngine.LowLevel;
 using UnityEngine.PlayerLoop;
@@ -107,3 +108,4 @@ namespace COM3D2.HaloFollow.Plugin
         }
     }
 }
+#endif
