@@ -43,6 +43,7 @@
     <Compile Include="..\..\MTEUtils\IScreenScalableWindow.cs" Link="MTEUtils\IScreenScalableWindow.cs" />
     <Compile Include="..\..\MTEUtils\ITabVisibleWindow.cs" Link="MTEUtils\ITabVisibleWindow.cs" />
     <Compile Include="..\..\MTEUtils\InputRemapperClient.cs" Link="MTEUtils\InputRemapperClient.cs" />
+    <Compile Include="..\..\MTEUtils\KeyBind.cs" Link="MTEUtils\KeyBind.cs" />
     <Compile Include="..\..\MTEUtils\MTEUtils.cs" Link="MTEUtils\MTEUtils.cs" />
     <Compile Include="..\..\MTEUtils\MainThreadDispatcher.cs" Link="MTEUtils\MainThreadDispatcher.cs" />
     <Compile Include="..\..\MTEUtils\ManagerRegistry.cs" Link="MTEUtils\ManagerRegistry.cs" />

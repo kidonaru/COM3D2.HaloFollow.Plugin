@@ -16,6 +16,11 @@
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>$(ManagedDir)\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
+    <!-- MTEUtils の静的初期化子が CharacterMgr の型を引くため、KeyBind など MTEUtils に触れるテストで要る（SceneEditor のテストと同じ） -->
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(ManagedDir)\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <None Include="$(ManagedDir)\Assembly-CSharp-firstpass.dll" CopyToOutputDirectory="PreserveNewest" Visible="false" />
     <!-- netstandard.dll は Unity の 2.1 facade。UnityEngine.CoreModule が netstandard 2.1 を要求するため実行時に必要 -->
     <None Include="$(ManagedDir)\netstandard.dll" CopyToOutputDirectory="PreserveNewest" Visible="false" />
   </ItemGroup>

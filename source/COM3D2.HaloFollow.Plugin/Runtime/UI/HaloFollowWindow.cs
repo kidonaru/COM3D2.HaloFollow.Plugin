@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using BepInEx.Configuration;
 using COM3D2.MotionTimelineEditor;
 using UnityEngine;
 
@@ -8,7 +7,7 @@ namespace COM3D2.HaloFollow.Plugin
 {
     /// <summary>
     /// 設定ウィンドウ。SceneEditor があればそのウィンドウとタブでドッキングし、無ければ独立ウィンドウになる。
-    /// メイドごとの設定は MaidSettingsStore へ、全体の設定は BepInEx の ConfigEntry へ書き、次のフレームから反映される
+    /// メイドごとの設定は MaidSettingsStore へ、全体の設定は HaloFollowConfig へ書き、次のフレームから反映される
     /// </summary>
     internal sealed class HaloFollowWindow : DockableWindowBase
     {
@@ -599,7 +598,7 @@ namespace COM3D2.HaloFollow.Plugin
             DrawSectionEnd(view);
             if (view.DrawButton("判定の設定を初期値に戻す", -1, RowHeight, tooltip: "このタブの項目をすべて初期値に戻す"))
             {
-                _config.ResetToDefault(_config.DetectionEntries);
+                _config.ResetToDefault(_config.DetectionSettings);
             }
         }
 
@@ -611,7 +610,7 @@ namespace COM3D2.HaloFollow.Plugin
             {
                 view.DrawLabel(UIScaleClient.followingHostMessage, -1, RowHeight, Color.gray);
             }
-            view.DrawLabel("開閉キー: " + _config.WindowShortcut.Value + "（設定ファイルで変更）", -1, RowHeight);
+            view.DrawLabel("開閉キー: " + _config.WindowShortcut + "（設定ファイルで変更）", -1, RowHeight);
             DrawStatus(view);
         }
 
@@ -905,20 +904,19 @@ namespace COM3D2.HaloFollow.Plugin
             });
         }
 
-        private static void EntrySlider(GUIView view, ConfigEntry<float> entry, string label)
+        private static void EntrySlider(GUIView view, RangedFloatSetting setting, string label)
         {
-            var range = (AcceptableValueRange<float>)entry.Description.AcceptableValues;
             view.DrawSliderValue(new GUIView.SliderOption
             {
                 label = label,
                 labelWidth = LabelWidth,
                 width = -1,
-                min = range.MinValue,
-                max = range.MaxValue,
-                defaultValue = (float)entry.DefaultValue,
-                value = entry.Value,
-                onChanged = v => entry.Value = v,
-                tooltip = entry.Description.Description,
+                min = setting.Min,
+                max = setting.Max,
+                defaultValue = setting.DefaultValue,
+                value = setting.Value,
+                onChanged = v => setting.Value = v,
+                tooltip = setting.Description,
             });
         }
     }

@@ -33,8 +33,8 @@ namespace COM3D2.HaloFollow.Plugin
         private void Awake()
         {
             Log = Logger;
-            _config = new HaloFollowConfig(Config);
             var dataRoot = Path.Combine(Paths.ConfigPath, PluginInfo.PluginName);
+            _config = new HaloFollowConfig(Path.Combine(dataRoot, PluginInfo.PluginName + ".xml"), m => Log.LogWarning(m));
             _store = new MaidSettingsStore(Path.Combine(dataRoot, "Maids"), m => Log.LogWarning(m));
             // メイドの設定と同じフォルダに置くと、guid のファイルとプリセット名のファイルが混ざる
             _presets = new PresetStore<HaloPreset>(Path.Combine(dataRoot, "Presets"), "プリセット", m => Log.LogWarning(m));
@@ -78,7 +78,7 @@ namespace COM3D2.HaloFollow.Plugin
         {
             if (EnsureWindowManager())
             {
-                if (_config.WindowShortcut.Value.IsDown())
+                if (_config.WindowShortcut.GetKeyDown())
                 {
                     ToggleWindow();
                 }

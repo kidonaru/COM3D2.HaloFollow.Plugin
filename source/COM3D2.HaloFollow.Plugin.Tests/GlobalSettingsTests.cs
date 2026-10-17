@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using COM3D2.MotionTimelineEditor;
 using Xunit;
 
 namespace COM3D2.HaloFollow.Plugin.Tests
@@ -117,6 +118,65 @@ namespace COM3D2.HaloFollow.Plugin.Tests
 
                 Assert.True(store.Save(new GlobalSettings()));
                 Assert.True(File.Exists(Path.Combine(temp.Path, "Config", "HaloFollow.xml")));
+            }
+        }
+    }
+
+    public class HaloFollowConfigTests
+    {
+        private readonly List<string> _warnings = new List<string>();
+
+        public HaloFollowConfigTests()
+        {
+            // 既定の出力先は Unity の Debug.Log で、Unity ランタイムの無いテストでは落ちる
+            MTEUtils.logOutput = (level, message, e) => { };
+        }
+
+        [Fact]
+        public void ParseShortcut_不正な文字列は既定に戻して警告する()
+        {
+            Assert.Equal("Ctrl+Shift+H", HaloFollowConfig.ParseShortcut("Foo+Bar", _warnings.Add).ToString());
+            Assert.Equal("Ctrl+Shift+H", HaloFollowConfig.ParseShortcut("", _warnings.Add).ToString());
+            Assert.Equal(2, _warnings.Count);
+        }
+
+        [Fact]
+        public void ParseShortcut_正しい文字列はそのまま()
+        {
+            Assert.Equal("Ctrl+F7", HaloFollowConfig.ParseShortcut("Ctrl+F7", _warnings.Add).ToString());
+            Assert.Empty(_warnings);
+        }
+
+        [Fact]
+        public void 範囲外の値は読み込み時に丸める()
+        {
+            using (var temp = new TempDirectory())
+            {
+                var path = Path.Combine(temp.Path, "HaloFollow.xml");
+                new GlobalSettingsStore(path, _warnings.Add).Save(new GlobalSettings { teleportDistanceCm = 0f, uiScale = 10f });
+
+                var config = new HaloFollowConfig(path, _warnings.Add);
+
+                Assert.Equal(1f, config.TeleportDistanceCm.Value);
+                Assert.Equal(UIScaleSetting.Max, config.UIScale.Value);
+            }
+        }
+
+        [Fact]
+        public void 変更して1秒後に保存される()
+        {
+            using (var temp = new TempDirectory())
+            {
+                var path = Path.Combine(temp.Path, "HaloFollow.xml");
+                var config = new HaloFollowConfig(path, _warnings.Add);
+
+                config.TeleportAngle.Value = 90f;
+                config.SaveIfDirty(10f);
+                config.SaveIfDirty(10.5f);
+                Assert.False(File.Exists(path));
+
+                config.SaveIfDirty(11f);
+                Assert.Equal(90f, new GlobalSettingsStore(path, _warnings.Add).Load().teleportAngle);
             }
         }
     }

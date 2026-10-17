@@ -3,7 +3,7 @@ using UnityEngine;
 namespace COM3D2.HaloFollow.Plugin
 {
     /// <summary>
-    /// 設定ウィンドウの位置とサイズを BepInEx の設定へ保存する。
+    /// 設定ウィンドウの位置とサイズを全体の設定へ保存する。
     /// DockableWindowBase はドラッグ中に毎フレーム StorePlacement を呼ぶため、マウスを離してからまとめて書く
     /// </summary>
     internal sealed class WindowPlacement
@@ -53,7 +53,7 @@ namespace COM3D2.HaloFollow.Plugin
         }
 
         // 同じ値でも代入すると、設定の保存予約がクリックのたびに延びる
-        private static void SetIfChanged(BepInEx.Configuration.ConfigEntry<int> entry, int value)
+        private static void SetIfChanged(Setting<int> entry, int value)
         {
             if (entry.Value != value)
             {
