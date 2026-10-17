@@ -10,7 +10,7 @@ namespace COM3D2.HaloFollow.Plugin
     }
 
     /// <summary>
-    /// 目標姿勢へ位置・回転を減衰追従させ、静止中は上下に浮遊させる。1 装備につき 1 つ持つ
+    /// 目標姿勢へ位置・回転を減衰追従させ、上下に浮遊させる。1 装備につき 1 つ持つ
     /// </summary>
     internal sealed class FollowSolver
     {
@@ -36,9 +36,7 @@ namespace COM3D2.HaloFollow.Plugin
         /// <summary>浮遊の強さ（0〜1 の線形値。出力時に smoothstep をかける）</summary>
         public float FloatWeight { get; private set; }
 
-        public StillnessDetector Stillness { get; } = new StillnessDetector();
-
-        /// <summary>目標姿勢へ即座に合わせて内部速度を消す。resetFloat なら浮遊の位相・強さと静止判定も初期化する</summary>
+        /// <summary>目標姿勢へ即座に合わせて内部速度を消す。resetFloat なら浮遊の位相・強さも初期化する</summary>
         public void Reset(Vector3 targetPos, Quaternion targetRot, bool resetFloat)
         {
             Position = targetPos;
@@ -51,7 +49,6 @@ namespace COM3D2.HaloFollow.Plugin
             {
                 FloatPhase = 0f;
                 FloatWeight = 0f;
-                Stillness.Reset();
             }
             IsInitialized = true;
         }
@@ -75,12 +72,12 @@ namespace COM3D2.HaloFollow.Plugin
             }
             else if (IsTeleport(moved, turned, dt, s))
             {
-                // 静止判定まで初期化すると、静止中のポーズの瞬間切替で浮遊が途切れる
+                // 浮遊まで初期化すると、ポーズの瞬間切替のたびに浮遊が途切れる
                 Reset(targetPos, targetRot, false);
+                AdvanceFloat(dt, s);
             }
             else
             {
-                Stillness.Update(moved, turned, dt, s);
                 Integrate(targetPos, targetRot, dt, s);
                 AdvanceFloat(dt, s);
             }
@@ -169,7 +166,7 @@ namespace COM3D2.HaloFollow.Plugin
 
         private void AdvanceFloat(float dt, FollowSettings s)
         {
-            var goal = s.FloatEnabled && s.FloatAmplitude > 0f && Stillness.IsStill ? 1f : 0f;
+            var goal = s.FloatEnabled && s.FloatAmplitude > 0f ? 1f : 0f;
             FloatWeight = s.FloatTransitionTime > 0f
                 ? Mathf.MoveTowards(FloatWeight, goal, dt / s.FloatTransitionTime)
                 : goal;

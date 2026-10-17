@@ -89,13 +89,19 @@ namespace COM3D2.HaloFollow.Plugin.Tests
         public void 位置と角度のずれは上限を超えない()
         {
             var s = NoFloat();
+            s.MaxPositionOffset = 0.03f;
+            s.MaxAngle = 10f;
             var solver = Started(Vector3.zero, Quaternion.identity);
             var target = new Vector3(0.15f, 0f, 0f);
             var rot = TestQuaternions.AroundY(40f);
             // 0.15m/0.05s = 3m/s と 800deg/s は瞬間移動の速度に届かない
             var pose = solver.Step(target, rot, 0.05f, s);
-            Assert.True((pose.Position - target).magnitude <= s.MaxPositionOffset + 1e-5f);
-            Assert.True(QuatMath.AngleDeg(pose.Rotation, rot) <= s.MaxAngle + 1e-3f);
+            var offset = (pose.Position - target).magnitude;
+            var angle = QuatMath.AngleDeg(pose.Rotation, rot);
+            Assert.True(offset <= s.MaxPositionOffset + 1e-5f);
+            Assert.True(angle <= s.MaxAngle + 1e-3f);
+            Assert.True(offset > s.MaxPositionOffset - 1e-3f);
+            Assert.True(angle > s.MaxAngle - 0.5f);
         }
 
         [Fact]
@@ -144,7 +150,7 @@ namespace COM3D2.HaloFollow.Plugin.Tests
         }
 
         [Fact]
-        public void 静止中は上下だけに振幅内で浮遊し_角度は基準()
+        public void 上下だけに振幅内で浮遊し_角度は基準()
         {
             var s = new FollowSettings();
             var rot = TestQuaternions.AroundX(30f);
@@ -163,16 +169,43 @@ namespace COM3D2.HaloFollow.Plugin.Tests
         }
 
         [Fact]
-        public void 浮遊の切替で位置が跳ねない()
+        public void 動いている間も浮遊する()
+        {
+            var s = new FollowSettings();
+            var solver = Started(Vector3.zero, Quaternion.identity);
+            var maxY = 0f;
+            for (var i = 0; i < 60 * 4; i++)
+            {
+                var t = (float)i / 60f;
+                var target = new Vector3(0.05f * (float)Math.Sin(2.0 * Math.PI * t), 0f, 0f);
+                var pose = solver.Step(target, Quaternion.identity, Dt, s);
+                maxY = Math.Max(maxY, pose.Position.y);
+            }
+            Assert.True(maxY > s.FloatAmplitude * 0.95f);
+        }
+
+        [Fact]
+        public void 瞬間移動したフレームも浮遊の位相が進む()
+        {
+            var s = new FollowSettings();
+            var solver = Started(Vector3.zero, Quaternion.identity);
+            solver.Step(Vector3.zero, Quaternion.identity, Dt, s);
+            var before = solver.FloatPhase;
+            solver.Step(new Vector3(10f, 0f, 0f), Quaternion.identity, Dt, s);
+            Assert.Equal(before + Dt / s.FloatPeriod, solver.FloatPhase, 5);
+        }
+
+        [Fact]
+        public void 浮遊のONOFFで位置が跳ねない()
         {
             var s = new FollowSettings();
             var solver = Started(Vector3.zero, Quaternion.identity);
             var prev = solver.Step(Vector3.zero, Quaternion.identity, Dt, s);
             for (var i = 0; i < 60 * 8; i++)
             {
-                // 4 秒静止 → 2 秒等速移動 → 2 秒静止
-                var x = 0.05f * Mathf.Clamp(i - 240, 0, 120) / 60f;
-                var pose = solver.Step(new Vector3(x, 0f, 0f), Quaternion.identity, Dt, s);
+                // 2 秒 ON → 2 秒 OFF → 4 秒 ON
+                s.FloatEnabled = i < 120 || i >= 240;
+                var pose = solver.Step(Vector3.zero, Quaternion.identity, Dt, s);
                 Assert.True(Math.Abs(pose.Position.y - prev.Position.y) < 0.001f);
                 prev = pose;
             }

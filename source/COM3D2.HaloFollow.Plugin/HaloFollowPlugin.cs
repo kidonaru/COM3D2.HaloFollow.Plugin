@@ -1,3 +1,4 @@
+using System.IO;
 using BepInEx;
 using BepInEx.Logging;
 using COM3D2.MotionTimelineEditor;
@@ -8,7 +9,7 @@ using UnityEngine.SceneManagement;
 namespace COM3D2.HaloFollow.Plugin
 {
     /// <summary>
-    /// 頭に固定されたヘイローを、頭の動きに少し遅れて追従させ、静止中は上下に浮遊させる
+    /// 頭に固定されたヘイローを、頭の動きに少し遅れて追従させ、上下に浮遊させる
     /// </summary>
     [BepInPlugin(PluginInfo.PluginGuid, PluginInfo.PluginFullName, PluginInfo.PluginVersion)]
     public class HaloFollowPlugin : BaseUnityPlugin
@@ -20,6 +21,8 @@ namespace COM3D2.HaloFollow.Plugin
 
         private HaloFollowConfig _config;
         private HaloFollowRegistry _registry;
+        private MaidSettingsStore _store;
+        private PresetStore<HaloPreset> _presets;
         private WindowManager _windowManager;
         private bool _windowInitFailed;
         private GearIconButton _gearButton;
@@ -31,8 +34,12 @@ namespace COM3D2.HaloFollow.Plugin
         {
             Log = Logger;
             _config = new HaloFollowConfig(Config);
-            _registry = new HaloFollowRegistry(_config, m => Log.LogInfo(m), m => Log.LogError(m));
-            _config.StructureChanged += _registry.RequestRescan;
+            var dataRoot = Path.Combine(Paths.ConfigPath, PluginInfo.PluginName);
+            _store = new MaidSettingsStore(Path.Combine(dataRoot, "Maids"), m => Log.LogWarning(m));
+            // メイドの設定と同じフォルダに置くと、guid のファイルとプリセット名のファイルが混ざる
+            _presets = new PresetStore<HaloPreset>(Path.Combine(dataRoot, "Presets"), "プリセット", m => Log.LogWarning(m));
+            _registry = new HaloFollowRegistry(_config, _store, m => Log.LogInfo(m), m => Log.LogError(m));
+            _config.EnabledChanged += _registry.RequestRescan;
             _gearButton = new GearIconButton(Log);
 
             // パッチの失敗で Awake ごと止めると、1 秒ごとの再検出で代わりが利くのに追従全体が動かなくなる
@@ -66,6 +73,7 @@ namespace COM3D2.HaloFollow.Plugin
                 _windowManager.Update();
             }
             _config.SaveIfDirty(Time.unscaledTime);
+            _store.FlushIfDue(Time.realtimeSinceStartup);
             EnsureHook();
         }
 
@@ -90,6 +98,8 @@ namespace COM3D2.HaloFollow.Plugin
             PlayerLoopHook.Uninstall();
             _harmony?.UnpatchSelf();
             _registry.ReleaseAll();
+            // 全体設定の保存が例外を出しても、まだ書いていないメイドの設定を失わないよう先に書く
+            _store.FlushAll();
             _config.Save();
             // 先に呼ぶと、ドッキング解除の例外で PlayerLoop の差し込みやパッチが破棄済みのプラグインを指したまま残る
             try
@@ -142,7 +152,7 @@ namespace COM3D2.HaloFollow.Plugin
             }
             try
             {
-                var manager = new WindowManager(_config, _registry);
+                var manager = new WindowManager(_config, _registry, _store, _presets);
                 manager.Init();
                 manager.MainWindow.Closed += _config.Save;
                 _windowManager = manager;
@@ -175,6 +185,7 @@ namespace COM3D2.HaloFollow.Plugin
 
         private void OnQuitting()
         {
+            _store.FlushAll();
             _config.Save();
         }
     }

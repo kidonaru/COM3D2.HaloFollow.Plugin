@@ -17,6 +17,7 @@
     <Compile Include="..\..\MTEUtils\GearMenu.cs" Link="MTEUtils\GearMenu.cs" />
     <Compile Include="..\..\MTEUtils\ColorExtensions.cs" Link="MTEUtils\ColorExtensions.cs" />
     <Compile Include="..\..\MTEUtils\ColorPickerWindow.cs" Link="MTEUtils\ColorPickerWindow.cs" />
+    <Compile Include="..\..\MTEUtils\ComboBoxPopupWindow.cs" Link="MTEUtils\ComboBoxPopupWindow.cs" />
     <Compile Include="..\..\MTEUtils\CurveData.cs" Link="MTEUtils\CurveData.cs" />
     <Compile Include="..\..\MTEUtils\CurveEditorWindow.cs" Link="MTEUtils\CurveEditorWindow.cs" />
     <Compile Include="..\..\MTEUtils\DialogPopupWindow.cs" Link="MTEUtils\DialogPopupWindow.cs" />

@@ -4,8 +4,16 @@ using UnityEngine;
 
 namespace COM3D2.HaloFollow.Plugin
 {
+    internal enum EntryStatus
+    {
+        NotEquipped,
+        Following,
+        /// <summary>装備はあるが追従できない（ボーンが無い・ボーンルートのアタッチなど。理由はログ）</summary>
+        Failed,
+    }
+
     /// <summary>
-    /// 設定に合う装備を検出して FollowBinding を保持し、毎フレーム追従を更新する
+    /// メイドごとの設定に合う装備を検出して FollowBinding を保持し、毎フレーム追従を更新する
     /// </summary>
     internal sealed class HaloFollowRegistry
     {
@@ -15,6 +23,7 @@ namespace COM3D2.HaloFollow.Plugin
         private static bool s_propChanged = true;
 
         private readonly HaloFollowConfig _config;
+        private readonly MaidSettingsStore _store;
         private readonly Action<string> _logError;
         private readonly Action<string> _logInfo;
         private readonly MaidClockTracker _clocks;
@@ -23,13 +32,15 @@ namespace COM3D2.HaloFollow.Plugin
         private readonly HashSet<Maid> _activeMaids = new HashSet<Maid>();
         private readonly HashSet<string> _failedKeys = new HashSet<string>();
         private readonly HashSet<string> _loggedErrors = new HashSet<string>();
+        private readonly HashSet<SlotSettings> _failedEntries = new HashSet<SlotSettings>();
         private bool _rescanRequested = true;
         private bool _resetRequested;
         private float _nextRescanTime;
 
-        public HaloFollowRegistry(HaloFollowConfig config, Action<string> logInfo, Action<string> logError)
+        public HaloFollowRegistry(HaloFollowConfig config, MaidSettingsStore store, Action<string> logInfo, Action<string> logError)
         {
             _config = config;
+            _store = store;
             _logInfo = logInfo;
             _logError = logError;
             _clocks = new MaidClockTracker(config);
@@ -54,6 +65,33 @@ namespace COM3D2.HaloFollow.Plugin
         {
             _rescanRequested = true;
             _failedKeys.Clear();
+        }
+
+        /// <summary>設定画面の表示用。前回の再検出の結果で、スロットの設定が今どうなっているかを返す</summary>
+        public EntryStatus GetStatus(SlotSettings entry)
+        {
+            foreach (var binding in _bindings)
+            {
+                if (binding.Entry == entry)
+                {
+                    return EntryStatus.Following;
+                }
+            }
+            return _failedEntries.Contains(entry) ? EntryStatus.Failed : EntryStatus.NotEquipped;
+        }
+
+        /// <summary>設定画面の表示用。スロットの設定で追従中の装備。無ければ null</summary>
+        public FollowBinding FindBinding(SlotSettings entry)
+        {
+            // Find にラムダを渡すと、設定画面の OnGUI のたびにクロージャを確保する
+            foreach (var binding in _bindings)
+            {
+                if (binding.Entry == entry)
+                {
+                    return binding;
+                }
+            }
+            return null;
         }
 
         /// <summary>全装備の追従を現在の頭の姿勢へ合わせ、速度と浮遊を初期化する</summary>
@@ -144,6 +182,8 @@ namespace COM3D2.HaloFollow.Plugin
 
         private void UpdateBinding(FollowBinding binding, int frame)
         {
+            binding.Shade.Apply(HaloShade.Compute(binding.Entry.param));
+            binding.Layer.Apply(HaloRenderLayers.ToUnityLayer(binding.Entry.param.renderLayer));
             // 非表示中も LastUpdateFrame を更新すると、表示の復帰時に古い追従状態を引き継ぐ
             if (!binding.Obj.activeInHierarchy)
             {
@@ -151,7 +191,7 @@ namespace COM3D2.HaloFollow.Plugin
             }
 
             var unitsPerCm = binding.UnitsPerCm();
-            _config.FillSettings(binding.Target, unitsPerCm, binding.Settings);
+            _config.FillSettings(binding.Entry.param, unitsPerCm, binding.Settings);
             Vector3 targetPos;
             Quaternion targetRot;
             binding.GetTarget(unitsPerCm, out targetPos, out targetRot);
@@ -175,6 +215,7 @@ namespace COM3D2.HaloFollow.Plugin
         private void Rescan()
         {
             _foundSkins.Clear();
+            _failedEntries.Clear();
             var characterMgr = GameMain.Instance != null ? GameMain.Instance.CharacterMgr : null;
             if (characterMgr != null)
             {
@@ -182,7 +223,9 @@ namespace COM3D2.HaloFollow.Plugin
                 for (var i = 0; i < count; i++)
                 {
                     var maid = characterMgr.GetMaid(i);
-                    if (maid == null || maid.body0 == null || !maid.Visible || maid.IsAllProcPropBusy)
+                    // guid が空のメイドは設定を保存できず、Get するたびに一時的な設定を作ってしまう
+                    if (maid == null || maid.body0 == null || !maid.Visible || maid.IsAllProcPropBusy
+                        || maid.status == null || string.IsNullOrEmpty(maid.status.guid))
                     {
                         continue;
                     }
@@ -205,9 +248,15 @@ namespace COM3D2.HaloFollow.Plugin
 
         private void ScanMaid(Maid maid)
         {
+            var settings = _store.Get(maid.status.guid);
+            if (settings.slots.Count == 0)
+            {
+                return;
+            }
             var slots = maid.body0.goSlot;
             for (var slotNo = 0; slotNo < slots.Count; slotNo++)
             {
+                // CRC のサブスロット（subNo > 0）は親と同じ Category を持つため、まとめて対象にする
                 var children = slots.CountChildren(slotNo);
                 for (var subNo = 0; subNo < children; subNo++)
                 {
@@ -216,41 +265,45 @@ namespace COM3D2.HaloFollow.Plugin
                     {
                         continue;
                     }
-                    var menuFileName = skin.m_mp != null ? skin.m_mp.strFileName : null;
-                    var target = _config.FindTarget(skin.m_strModelFileName, menuFileName);
-                    if (target == null || !target.Enabled.Value)
+                    var entry = settings.Find(skin.Category);
+                    if (entry == null || !entry.enabled)
                     {
                         continue;
                     }
-                    if (KeepOrRebind(maid, skin, target))
+                    if (KeepOrRebind(maid, skin, entry))
                     {
                         _foundSkins.Add(skin);
+                    }
+                    else
+                    {
+                        _failedEntries.Add(entry);
                     }
                 }
             }
         }
 
-        private bool KeepOrRebind(Maid maid, TBodySkin skin, TargetConfig target)
+        private bool KeepOrRebind(Maid maid, TBodySkin skin, SlotSettings entry)
         {
+            var boneName = entry.param.boneName;
             var index = _bindings.FindIndex(b => b.Skin == skin);
             if (index >= 0)
             {
                 var existing = _bindings[index];
-                if (existing.IsValid && existing.Obj == skin.obj && existing.Target == target
-                    && existing.BoneName == target.BoneName.Value && existing.AreBonesIntact())
+                if (existing.IsValid && existing.Obj == skin.obj && existing.Entry == entry
+                    && existing.BoneName == boneName && existing.AreBonesIntact())
                 {
                     return true;
                 }
                 RemoveAt(index);
             }
 
-            var failureKey = FailureKey(skin.obj, target.BoneName.Value);
+            var failureKey = FailureKey(skin.obj, boneName);
             if (_failedKeys.Contains(failureKey))
             {
                 return false;
             }
             string reason;
-            var created = FollowBinding.TryCreate(maid, skin, target, out reason);
+            var created = FollowBinding.TryCreate(maid, skin, entry, out reason);
             if (created == null)
             {
                 _failedKeys.Add(failureKey);

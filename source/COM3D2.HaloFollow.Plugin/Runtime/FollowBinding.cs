@@ -18,23 +18,27 @@ namespace COM3D2.HaloFollow.Plugin
         public Maid Maid { get; private set; }
         public TBodySkin Skin { get; private set; }
         public GameObject Obj { get; private set; }
-        public TargetConfig Target { get; private set; }
+        public SlotSettings Entry { get; private set; }
+        public string Guid { get; private set; }
         public string BoneName { get; private set; }
         public Transform Bone { get; private set; }
         public Transform Proxy { get; private set; }
         public FollowSolver Solver { get; } = new FollowSolver();
         public FollowSettings Settings { get; } = new FollowSettings();
+        public ShadeApplier Shade { get; private set; }
+        public LayerApplier Layer { get; private set; }
         public int LastUpdateFrame { get; set; } = -1;
 
         public bool IsValid
         {
-            get { return _swapped && Obj != null && Skin.obj == Obj && Bone != null && Proxy != null; }
+            // guid を照合しないと、ストックのメイドに別のキャラが入ったとき前のキャラの設定で追従し続ける
+            get { return _swapped && Obj != null && Skin.obj == Obj && Bone != null && Proxy != null && Maid.status != null && Maid.status.guid == Guid; }
         }
 
         /// <summary>
         /// 装備の bones から対象ボーンを探して代理へ差し替える。追従できなければ null を返し、何も変更しない
         /// </summary>
-        public static FollowBinding TryCreate(Maid maid, TBodySkin skin, TargetConfig target, out string failureReason)
+        public static FollowBinding TryCreate(Maid maid, TBodySkin skin, SlotSettings entry, out string failureReason)
         {
             // ゲームのボーンルートアタッチは bones の名前でコピー階層を引き直すため、代理名が混ざると例外になる
             if (skin.m_attachType == TBodySkin.ATTACH_TYPE.BONE_ROOT)
@@ -44,7 +48,7 @@ namespace COM3D2.HaloFollow.Plugin
             }
 
             var obj = skin.obj;
-            var boneName = target.BoneName.Value;
+            var boneName = entry.param.boneName;
             var proxyName = ProxyPrefix + boneName;
             var renderers = obj.GetComponentsInChildren<SkinnedMeshRenderer>(true);
             Transform bone;
@@ -72,10 +76,13 @@ namespace COM3D2.HaloFollow.Plugin
                 Maid = maid,
                 Skin = skin,
                 Obj = obj,
-                Target = target,
+                Entry = entry,
+                Guid = maid.status.guid,
                 BoneName = boneName,
                 Bone = bone,
                 Proxy = proxy,
+                Shade = new ShadeApplier(obj),
+                Layer = new LayerApplier(obj),
             };
             binding.Swap(renderers);
             if (!binding._swapped)
@@ -115,8 +122,9 @@ namespace COM3D2.HaloFollow.Plugin
         public void GetTarget(float unitsPerCm, out Vector3 position, out Quaternion rotation)
         {
             var boneRotation = Bone.rotation;
-            position = Bone.position + boneRotation * (Target.OffsetPositionCm.Value * unitsPerCm);
-            rotation = boneRotation * Quaternion.Euler(Target.OffsetRotation.Value);
+            var p = Entry.param;
+            position = Bone.position + boneRotation * (new Vector3(p.offsetXCm, p.offsetYCm, p.offsetZCm) * unitsPerCm);
+            rotation = boneRotation * Quaternion.Euler(p.offsetRotX, p.offsetRotY, p.offsetRotZ);
         }
 
         public void Apply(FollowPose pose)
@@ -131,6 +139,20 @@ namespace COM3D2.HaloFollow.Plugin
         // 差し替え時の配列を丸ごと書き戻すと、その後にゲームや他のプラグインが設定した bones を古い参照で上書きする。
         // 代理を Destroy すると、SceneEditor の影の複製のように bones を写した側が破棄済みの Transform を参照し続ける
         public void Release()
+        {
+            // 見た目の復元を先にすると、そこで例外が出たときに bones が代理を指したまま残り、ヘイローが空中に取り残される
+            try
+            {
+                ReleaseBones();
+            }
+            finally
+            {
+                Shade.Restore();
+                Layer.Restore();
+            }
+        }
+
+        private void ReleaseBones()
         {
             if (_swapped)
             {

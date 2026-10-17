@@ -12,6 +12,8 @@ namespace COM3D2.HaloFollow.Plugin
     {
         private readonly HaloFollowConfig _config;
         private readonly HaloFollowRegistry _registry;
+        private readonly MaidSettingsStore _store;
+        private readonly PresetStore<HaloPreset> _presets;
         private bool _isCameraControlDisabled;
         private bool _isUIInputDisabled;
         private bool _isGizmoLocked;
@@ -20,10 +22,12 @@ namespace COM3D2.HaloFollow.Plugin
 
         public HaloFollowWindow MainWindow { get; private set; }
 
-        public WindowManager(HaloFollowConfig config, HaloFollowRegistry registry)
+        public WindowManager(HaloFollowConfig config, HaloFollowRegistry registry, MaidSettingsStore store, PresetStore<HaloPreset> presets)
         {
             _config = config;
             _registry = registry;
+            _store = store;
+            _presets = presets;
         }
 
         public override void Init()
@@ -32,8 +36,10 @@ namespace COM3D2.HaloFollow.Plugin
             GUIView.option = new GUIOption();
             base.Init();
 
-            MainWindow = new HaloFollowWindow(_config, _registry, new WindowPlacement(_config));
+            MainWindow = new HaloFollowWindow(_config, _registry, _store, _presets, new WindowPlacement(_config));
             AddWindow(MainWindow);
+            // コンボボックスのポップアップはホストの描画中に開閉が決まるため、ホストより後に登録する
+            AddWindow(ComboBoxPopupWindow.instance);
         }
 
         public override void Update()
