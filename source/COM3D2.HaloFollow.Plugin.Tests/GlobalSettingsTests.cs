@@ -10,7 +10,7 @@ namespace COM3D2.HaloFollow.Plugin.Tests
         [Fact]
         public void Setting_値が変わったときだけChangedを発火する()
         {
-            var setting = new Setting<int>(3, "説明");
+            var setting = new Setting<int>(3);
             var count = 0;
             setting.Changed += () => count++;
 
@@ -32,6 +32,16 @@ namespace COM3D2.HaloFollow.Plugin.Tests
 
             setting.Value = 500f;
             Assert.Equal(200f, setting.Value);
+        }
+
+        [Fact]
+        public void RangedFloatSetting_NaNは既定値にする()
+        {
+            var setting = new RangedFloatSetting(20f, 1f, 200f, "説明");
+
+            setting.Value = float.NaN;
+
+            Assert.Equal(20f, setting.Value);
         }
 
         [Fact]
@@ -176,12 +186,65 @@ namespace COM3D2.HaloFollow.Plugin.Tests
             using (var temp = new TempDirectory())
             {
                 var path = Path.Combine(temp.Path, "HaloFollow.xml");
-                new GlobalSettingsStore(path, _warnings.Add).Save(new GlobalSettings { teleportDistanceCm = 0f, uiScale = 10f });
+                new GlobalSettingsStore(path, _warnings.Add).Save(
+                    new GlobalSettings { teleportDistanceCm = 0f, uiScale = 10f, teleportAngle = float.NaN });
 
                 var config = new HaloFollowConfig(path, _warnings.Add);
 
                 Assert.Equal(1f, config.TeleportDistanceCm.Value);
                 Assert.Equal(UIScaleSetting.Max, config.UIScale.Value);
+                Assert.Equal(45f, config.TeleportAngle.Value);
+            }
+        }
+
+        [Fact]
+        public void 読み込んだだけでは保存しない()
+        {
+            using (var temp = new TempDirectory())
+            {
+                var path = Path.Combine(temp.Path, "HaloFollow.xml");
+                var config = new HaloFollowConfig(path, _warnings.Add);
+
+                config.SaveIfDirty(10f);
+                config.SaveIfDirty(20f);
+
+                Assert.False(File.Exists(path));
+            }
+        }
+
+        [Fact]
+        public void 変更が続く間は保存を延ばす()
+        {
+            using (var temp = new TempDirectory())
+            {
+                var path = Path.Combine(temp.Path, "HaloFollow.xml");
+                var config = new HaloFollowConfig(path, _warnings.Add);
+
+                config.TeleportAngle.Value = 90f;
+                config.SaveIfDirty(10f);
+                config.TeleportAngle.Value = 100f;
+                config.SaveIfDirty(10.5f);
+                config.SaveIfDirty(11f);
+                Assert.False(File.Exists(path));
+
+                config.SaveIfDirty(11.5f);
+                Assert.Equal(100f, new GlobalSettingsStore(path, _warnings.Add).Load().teleportAngle);
+            }
+        }
+
+        [Fact]
+        public void 有効化を切り替えるとEnabledChangedが発火する()
+        {
+            using (var temp = new TempDirectory())
+            {
+                var config = new HaloFollowConfig(Path.Combine(temp.Path, "HaloFollow.xml"), _warnings.Add);
+                var count = 0;
+                config.EnabledChanged += () => count++;
+
+                config.Enabled.Value = false;
+                config.Enabled.Value = false;
+
+                Assert.Equal(1, count);
             }
         }
 

@@ -17,9 +17,9 @@ COM3D2 / COM3D2.5 で、頭に固定されたヘイローなどの装備を、�
    - COM3D2.5: `UnityInjector (COM3D2.5)\COM3D2.HaloFollow.Plugin.dll`
    - 以前の BepInEx 版を入れていた場合は、`BepInEx\plugins\COM3D2.HaloFollow.dll` を削除します。残すと二重に動きます
 3. ゲームを起動し、ヘイローを装備したメイドを表示します
-
-衣装の着替えの検知に Harmony（BepInEx 同梱の `0Harmony.dll`）を使います。BepInEx が無い COM3D2 でも動きますが、着替え後の再検出が最大 1 秒遅れます。
 4. 設定ウィンドウの「追従」タブで、メイドとヘイローのスロット（帽子なら `accHat`）を選び、「このスロットを追従させる」を ON にします
+
+衣装の着替えの検知に Harmony（BepInEx 同梱の `0Harmony.dll`）を使います。BepInEx が無い COM3D2 でも動きますが、着替え後の再検出が最大 1 秒遅れ、uGUI の画面を操作している間はヘイローが頭の最終姿勢より前に動くことがあります。
 
 ## 解除
 
@@ -30,7 +30,7 @@ COM3D2 / COM3D2.5 で、頭に固定されたヘイローなどの装備を、�
 
 ## 操作
 
-ギアメニューの「HaloFollow」ボタンか `Ctrl + Shift + H` で、設定ウィンドウを開閉します（キーは全体の設定ファイルの `windowShortcut` で変更できます。書式は `Ctrl+Shift+H` のように修飾キーとキー名を `+` でつなぎます）。
+ギアメニューの「HaloFollow」ボタンか `Ctrl + Shift + H` で、設定ウィンドウを開閉します（キーは全体の設定ファイルの `windowShortcut` で変更できます。書式は `Ctrl+Shift+H` のように修飾キーとキー名を `+` でつなぎ、大文字小文字を区別します）。
 
 SceneEditor が入っていると、設定ウィンドウは SceneEditor のウィンドウと連携します。
 

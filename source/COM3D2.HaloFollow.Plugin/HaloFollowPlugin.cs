@@ -43,7 +43,7 @@ namespace COM3D2.HaloFollow.Plugin
             _config.EnabledChanged += _registry.RequestRescan;
             _gearButton = new GearIconButton(PluginLog.Warning);
 
-            HarmonyPatcher.TryApply(PluginLog.Warning);
+            HarmonyPatcher.Apply(PluginLog.Warning);
             _hooked = PlayerLoopHook.Install(_registry.Tick);
             if (!_hooked)
             {
@@ -93,7 +93,7 @@ namespace COM3D2.HaloFollow.Plugin
             Application.quitting -= OnQuitting;
 #endif
             PlayerLoopHook.Uninstall();
-            HarmonyPatcher.Remove();
+            HarmonyPatcher.Remove(PluginLog.Warning);
             _registry.ReleaseAll();
             // 全体設定の保存が例外を出しても、まだ書いていないメイドの設定を失わないよう先に書く
             _store.FlushAll();

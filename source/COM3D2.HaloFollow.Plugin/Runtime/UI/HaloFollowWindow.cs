@@ -590,11 +590,11 @@ namespace COM3D2.HaloFollow.Plugin
         {
             view.DrawLabel("全メイド共通の判定です", -1, RowHeight, Color.gray);
             DrawSection(view, "瞬間移動");
-            EntrySlider(view, _config.TeleportDistanceCm, "瞬間移動とみなす距離 cm");
-            EntrySlider(view, _config.TeleportAngle, "瞬間移動とみなす角度 度");
+            SettingSlider(view, _config.TeleportDistanceCm, "瞬間移動とみなす距離 cm");
+            SettingSlider(view, _config.TeleportAngle, "瞬間移動とみなす角度 度");
             DrawSection(view, "コマ送り・シーク");
-            EntrySlider(view, _config.FrameStepMax, "コマ送りの最大時間 秒");
-            EntrySlider(view, _config.SeekTolerance, "シーク判定の余裕 秒");
+            SettingSlider(view, _config.FrameStepMax, "コマ送りの最大時間 秒");
+            SettingSlider(view, _config.SeekTolerance, "シーク判定の余裕 秒");
             DrawSectionEnd(view);
             if (view.DrawButton("判定の設定を初期値に戻す", -1, RowHeight, tooltip: "このタブの項目をすべて初期値に戻す"))
             {
@@ -610,7 +610,7 @@ namespace COM3D2.HaloFollow.Plugin
             {
                 view.DrawLabel(UIScaleClient.followingHostMessage, -1, RowHeight, Color.gray);
             }
-            view.DrawLabel("開閉キー: " + _config.WindowShortcut + "（設定ファイルで変更）", -1, RowHeight);
+            view.DrawLabel("開閉キー: " + _config.WindowShortcut + "（Config\\HaloFollow.xml の windowShortcut で変更）", -1, RowHeight);
             DrawStatus(view);
         }
 
@@ -904,7 +904,7 @@ namespace COM3D2.HaloFollow.Plugin
             });
         }
 
-        private static void EntrySlider(GUIView view, RangedFloatSetting setting, string label)
+        private static void SettingSlider(GUIView view, RangedFloatSetting setting, string label)
         {
             view.DrawSliderValue(new GUIView.SliderOption
             {

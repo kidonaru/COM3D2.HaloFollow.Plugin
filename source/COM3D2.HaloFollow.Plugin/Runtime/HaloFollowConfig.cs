@@ -11,9 +11,6 @@ namespace COM3D2.HaloFollow.Plugin
     /// </summary>
     internal sealed class HaloFollowConfig
     {
-        public const int DefaultWindowWidth = 420;
-        public const int DefaultWindowHeight = 600;
-        private const string DefaultWindowShortcut = "Ctrl+Shift+H";
         private const float SaveDelaySeconds = 1f;
         private const float TeleportSpeedCm = 300f;
 
@@ -50,8 +47,8 @@ namespace COM3D2.HaloFollow.Plugin
             _store = new GlobalSettingsStore(path, warn);
             var file = _store.Load();
 
-            Enabled = new Setting<bool>(true,
-                "ヘイロー追従全体の有効化。無効にすると通常の頭への固定追従に戻る（メイドごとの設定は変わらない）");
+            var defaults = new GlobalSettings();
+            Enabled = new Setting<bool>(defaults.enabled);
             Track(Enabled, file.enabled);
             Enabled.Changed += () =>
             {
@@ -64,26 +61,26 @@ namespace COM3D2.HaloFollow.Plugin
             WindowShortcut = ParseShortcut(file.windowShortcut, warn);
 
             var solverDefaults = new FollowSettings();
-            TeleportDistanceCm = BindDetection(20f, 1f, 200f,
+            TeleportDistanceCm = BindDetection(defaults.teleportDistanceCm, 1f, 200f,
                 "1 フレームでこれ以上（cm）頭が動き、その速さが毎秒 " + TeleportSpeedCm + " cm を超えたら瞬間移動として即座に合わせる",
                 file.teleportDistanceCm);
-            TeleportAngle = BindDetection(45f, 1f, 180f,
+            TeleportAngle = BindDetection(defaults.teleportAngle, 1f, 180f,
                 "1 フレームでこれ以上（度）頭が回り、その速さが毎秒 " + solverDefaults.TeleportAngularSpeed + " 度を超えたら瞬間移動として即座に合わせる",
                 file.teleportAngle);
-            FrameStepMax = BindDetection(0.25f, 0.01f, 1f,
+            FrameStepMax = BindDetection(defaults.frameStepMax, 0.01f, 1f,
                 "一時停止中にモーション時刻がこの秒数以下だけ進んだらコマ送りとして追従を進める。超えたらシーク", file.frameStepMax);
-            SeekTolerance = BindDetection(0.1f, 0.01f, 1f,
+            SeekTolerance = BindDetection(defaults.seekTolerance, 0.01f, 1f,
                 "再生中にモーション時刻が想定よりこの秒数以上進んだらシークとみなす", file.seekTolerance);
 
-            WindowX = new Setting<int>(-1, "設定ウィンドウの位置 X（画面のピクセル）。負の値は画面中央");
+            WindowX = new Setting<int>(defaults.windowX);
             Track(WindowX, file.windowX);
-            WindowY = new Setting<int>(-1, "設定ウィンドウの位置 Y（画面のピクセル）。負の値は画面中央");
+            WindowY = new Setting<int>(defaults.windowY);
             Track(WindowY, file.windowY);
-            WindowWidth = new Setting<int>(DefaultWindowWidth, "設定ウィンドウの幅（画面のピクセル。UI 倍率をかけた後の実サイズ）");
+            WindowWidth = new Setting<int>(defaults.windowWidth);
             Track(WindowWidth, file.windowWidth);
-            WindowHeight = new Setting<int>(DefaultWindowHeight, "設定ウィンドウの高さ（画面のピクセル。UI 倍率をかけた後の実サイズ）");
+            WindowHeight = new Setting<int>(defaults.windowHeight);
             Track(WindowHeight, file.windowHeight);
-            UIScale = new RangedFloatSetting(1f, UIScaleSetting.Min, UIScaleSetting.Max,
+            UIScale = new RangedFloatSetting(defaults.uiScale, UIScaleSetting.Min, UIScaleSetting.Max,
                 "設定ウィンドウの UI 倍率。SceneEditor がある間は SceneEditor の倍率に従う");
             Track(UIScale, file.uiScale);
         }
@@ -96,8 +93,8 @@ namespace COM3D2.HaloFollow.Plugin
             {
                 return keyBind;
             }
-            warn("設定ウィンドウの開閉キー「" + text + "」を読めないため " + DefaultWindowShortcut + " を使います");
-            return new KeyBind(DefaultWindowShortcut);
+            warn("設定ウィンドウの開閉キー「" + text + "」を読めないため " + GlobalSettings.DefaultWindowShortcut + " を使います");
+            return new KeyBind(GlobalSettings.DefaultWindowShortcut);
         }
 
         public void ResetToDefault(IEnumerable<RangedFloatSetting> settings)

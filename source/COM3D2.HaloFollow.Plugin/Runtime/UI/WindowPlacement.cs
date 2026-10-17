@@ -25,8 +25,8 @@ namespace COM3D2.HaloFollow.Plugin
         {
             x = _config.WindowX.Value;
             y = _config.WindowY.Value;
-            width = _config.WindowWidth.Value > 0 ? _config.WindowWidth.Value : HaloFollowConfig.DefaultWindowWidth;
-            height = _config.WindowHeight.Value > 0 ? _config.WindowHeight.Value : HaloFollowConfig.DefaultWindowHeight;
+            width = _config.WindowWidth.Value > 0 ? _config.WindowWidth.Value : GlobalSettings.DefaultWindowWidth;
+            height = _config.WindowHeight.Value > 0 ? _config.WindowHeight.Value : GlobalSettings.DefaultWindowHeight;
         }
 
         public void Store(int x, int y, int width, int height)
@@ -53,11 +53,11 @@ namespace COM3D2.HaloFollow.Plugin
         }
 
         // 同じ値でも代入すると、設定の保存予約がクリックのたびに延びる
-        private static void SetIfChanged(Setting<int> entry, int value)
+        private static void SetIfChanged(Setting<int> setting, int value)
         {
-            if (entry.Value != value)
+            if (setting.Value != value)
             {
-                entry.Value = value;
+                setting.Value = value;
             }
         }
     }
