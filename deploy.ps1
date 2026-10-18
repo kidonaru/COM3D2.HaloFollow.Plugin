@@ -123,12 +123,27 @@ if ($changes -match 'TODO') {
 
 $repoUrl = (Invoke-Native 'gh' @('repo', 'view', '--json', 'url', '-q', '.url') 'リポジトリ情報の取得に失敗しました') -join ''
 $downloadUrl = "$repoUrl/releases/download/$tag/$zipName"
+# main を指すと、後のバージョンで変わった説明を古いリリースから読むことになる
+$readmeUrl = "$repoUrl/blob/$tag/README.md"
 
+# 二重引用符付き here-string 内ではバックティックがエスケープ文字になるため、
+# Markdown のインラインコード用バックティックは `` と 2 つ重ねて書く
 $notes = @"
 ### ダウンロード
-| 対象 | ファイル名 |
+[$zipName]($downloadUrl)
+
+zip を解凍し、お使いのゲームに対応したフォルダの中身を ``Sybaris\UnityInjector\`` へコピーしてください。
+
+| 対象 | 同梱フォルダ |
 |---|---|
-| **COM3D2 / COM3D2.5** | [$zipName]($downloadUrl) |
+| **COM3D2** | ``UnityInjector`` |
+| **COM3D2.5** | ``UnityInjector (COM3D2.5)`` |
+
+両方を同時に配置しないでください（dll の内容だけが異なり、ファイル構成は同じです）。
+
+UnityInjector（Sybaris、または BepInEx の UnityInjectorLoader）が導入済みである必要があります。
+
+使い方は [README]($readmeUrl) をご覧ください。
 
 ### 変更点
 $changes
