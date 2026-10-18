@@ -62,8 +62,6 @@ zip解凍後、お使いのゲームに対応したフォルダの中身を、`S
 
 UnityInjector（Sybaris、または BepInEx の UnityInjectorLoader）が導入済みである必要があります。
 
-以前の BepInEx 版を入れていた場合は、`BepInEx\plugins\COM3D2.HaloFollow.dll` を削除してください。残すと二重に動きます。
-
 
 ## アンインストール方法
 
@@ -149,8 +147,6 @@ UnityInjector（Sybaris、または BepInEx の UnityInjectorLoader）が導入�
 | メイドごとの設定 | `Sybaris\UnityInjector\Config\HaloFollow\Maids\<メイドの guid>.xml` |
 | プリセット | `Sybaris\UnityInjector\Config\HaloFollow\Presets\<名前>.xml` |
 | 全体の設定（有効化・開閉キー・判定・ウィンドウ） | `Sybaris\UnityInjector\Config\HaloFollow.xml` |
-
-BepInEx 版（0.1.0 の開発版）の `BepInEx\config\` の設定は引き継ぎません。
 
 - 読めない設定ファイルは `.bak` へ退避し、既定値（メイドの設定なら設定なし）で始めます
 - 同じ guid のメイドが 2 人いる場合は、設定を共有します

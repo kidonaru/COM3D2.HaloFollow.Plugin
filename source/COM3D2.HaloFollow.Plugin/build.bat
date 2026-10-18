@@ -8,8 +8,6 @@ rem :build の直前に日本語の rem を置くと、cmd が call :build の�
 
 set PLUGIN_NAME=COM3D2.HaloFollow.Plugin
 set ASSEMBLY_NAME=COM3D2.HaloFollow.Plugin
-rem 旧 BepInEx 版の dll 名。名前が変わったため上書きされず、残ると二重に動く
-set OLD_BEPINEX_DLL=COM3D2.HaloFollow.dll
 set REPO_DIR=%~dp0..\..
 
 rem 引数: %1 = debug/release (既定 release), %2 = com3d2/com3d25/all (既定 all)
@@ -84,10 +82,5 @@ if !ERRORLEVEL! neq 0 (
     echo 警告: %~4 へのデプロイに失敗しました ^(ゲーム起動中?^)
 ) else (
     echo %~4 へデプロイしました
-)
-
-rem 自動で消すと、利用者が意図して残した旧版を黙って失う
-if exist "%~3\BepInEx\plugins\%OLD_BEPINEX_DLL%" (
-    echo 警告: %~4 に旧 BepInEx 版が残っています。二重に動くため削除してください: %~3\BepInEx\plugins\%OLD_BEPINEX_DLL%
 )
 exit /b 0
