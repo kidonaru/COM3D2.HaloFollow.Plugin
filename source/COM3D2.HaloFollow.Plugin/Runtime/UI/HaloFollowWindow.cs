@@ -260,8 +260,7 @@ namespace COM3D2.HaloFollow.Plugin
                 return;
             }
 
-            _slotCombo.buttonSize = new Vector2(
-                Mathf.Max(60f, RemainWidth(view, ComboLabelWidth + GUIComboBoxBase.ARROW_SIZE * 2 + view.margin)), RowHeight);
+            FitComboWidth(_slotCombo, view, ComboLabelWidth);
             _slotCombo.DrawButton("スロット", view);
             // 矢印で切り替えると描画の途中で選択が変わり、このフレームのボーン候補が前のスロットのままになる
             if (_candidateSlot != _selectedSlot)
@@ -310,8 +309,7 @@ namespace COM3D2.HaloFollow.Plugin
             _maidCombo.items.Clear();
             _maidCombo.items.AddRange(_activeMaids);
             _maidCombo.currentItem = maid;
-            _maidCombo.buttonSize = new Vector2(
-                Mathf.Max(60f, RemainWidth(view, ComboLabelWidth + GUIComboBoxBase.ARROW_SIZE * 2 + view.margin)), RowHeight);
+            FitComboWidth(_maidCombo, view, ComboLabelWidth);
             _maidCombo.DrawButton("メイド", view);
             RefreshCandidates(maid);
             return maid;
@@ -376,8 +374,7 @@ namespace COM3D2.HaloFollow.Plugin
             }
             _boneCombo.items.AddRange(_boneNames);
             _boneCombo.currentItem = p.boneName;
-            _boneCombo.buttonSize = new Vector2(
-                Mathf.Max(60f, RemainWidth(view, LabelWidth + GUIComboBoxBase.ARROW_SIZE * 2 + view.margin)), RowHeight);
+            FitComboWidth(_boneCombo, view, LabelWidth);
             _boneCombo.DrawButton("追従ボーン", view);
 
             ParamToggle(view, guid, "位置の遅れ追従", p.positionFollow, v => p.positionFollow = v,
@@ -407,8 +404,7 @@ namespace COM3D2.HaloFollow.Plugin
 
             DrawSection(view, "描画");
             _layerCombo.currentItem = p.renderLayer;
-            _layerCombo.buttonSize = new Vector2(
-                Mathf.Max(60f, RemainWidth(view, LabelWidth + GUIComboBoxBase.ARROW_SIZE * 2 + view.margin)), RowHeight);
+            FitComboWidth(_layerCombo, view, LabelWidth);
             _layerCombo.DrawButton("描画レイヤー", view);
 
             DrawSection(view, "オフセット");
@@ -835,6 +831,14 @@ namespace COM3D2.HaloFollow.Plugin
         {
             // 要素間隔を引かないと、後ろに置く要素が間隔の分だけ右へはみ出す
             return view.viewRect.width - view.currentPos.x - view.padding.x * 2 - reserve - view.margin;
+        }
+
+        /// <summary>ラベルと前後矢印を除いた残り幅にボタンとドロップダウンの幅をそろえる</summary>
+        private static void FitComboWidth(GUIComboBoxBase combo, GUIView view, float labelWidth)
+        {
+            var width = Mathf.Max(60f, RemainWidth(view, labelWidth + GUIComboBoxBase.ARROW_SIZE * 2 + view.margin));
+            combo.buttonSize = new Vector2(width, RowHeight);
+            combo.contentSize.x = width;
         }
 
         /// <summary>メイドの設定の 1 項目のトグル。変えたら保存を予約する</summary>
