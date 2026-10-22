@@ -9,6 +9,6 @@ namespace COM3D2.HaloFollow.Plugin
         public const string PluginGuid = "com.kidonaru.com3d2.halofollow";
         public const string PluginName = "HaloFollow";
         public const string PluginFullName = "COM3D2." + PluginName + ".Plugin";
-        public const string PluginVersion = "1.0.0.0";
+        public const string PluginVersion = "1.0.1.0";
     }
 }
