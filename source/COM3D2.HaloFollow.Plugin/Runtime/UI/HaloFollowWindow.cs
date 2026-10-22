@@ -666,19 +666,14 @@ namespace COM3D2.HaloFollow.Plugin
 
         private void CollectActiveMaids()
         {
-            _activeMaids.Clear();
-            var characterMgr = GameMain.Instance != null ? GameMain.Instance.CharacterMgr : null;
-            if (characterMgr == null)
+            MaidCollector.CollectVisible(_activeMaids);
+            for (var i = _activeMaids.Count - 1; i >= 0; i--)
             {
-                return;
-            }
-            for (var i = 0; i < characterMgr.GetMaidCount(); i++)
-            {
-                var maid = characterMgr.GetMaid(i);
+                var maid = _activeMaids[i];
                 // guid が空のメイドは設定を保存できず、追加しても次の描画で消える
-                if (maid != null && maid.Visible && maid.body0 != null && maid.status != null && !string.IsNullOrEmpty(maid.status.guid))
+                if (maid.body0 == null || maid.status == null || string.IsNullOrEmpty(maid.status.guid))
                 {
-                    _activeMaids.Add(maid);
+                    _activeMaids.RemoveAt(i);
                 }
             }
         }

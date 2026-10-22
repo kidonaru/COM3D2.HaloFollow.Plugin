@@ -33,6 +33,7 @@ namespace COM3D2.HaloFollow.Plugin
         private readonly ReadOnlyCollection<FollowBinding> _readOnlyBindings;
         private readonly HashSet<TBodySkin> _foundSkins = new HashSet<TBodySkin>();
         private readonly HashSet<Maid> _activeMaids = new HashSet<Maid>();
+        private readonly List<Maid> _scanMaids = new List<Maid>();
         private readonly HashSet<string> _failedKeys = new HashSet<string>();
         private readonly HashSet<string> _loggedErrors = new HashSet<string>();
         private readonly HashSet<SlotSettings> _failedEntries = new HashSet<SlotSettings>();
@@ -221,22 +222,18 @@ namespace COM3D2.HaloFollow.Plugin
         {
             _foundSkins.Clear();
             _failedEntries.Clear();
-            var characterMgr = GameMain.Instance != null ? GameMain.Instance.CharacterMgr : null;
-            if (characterMgr != null)
+            MaidCollector.CollectVisible(_scanMaids);
+            foreach (var maid in _scanMaids)
             {
-                var count = characterMgr.GetMaidCount();
-                for (var i = 0; i < count; i++)
+                // guid が空のメイドは設定を保存できず、Get するたびに一時的な設定を作ってしまう
+                if (maid.body0 == null || maid.IsAllProcPropBusy
+                    || maid.status == null || string.IsNullOrEmpty(maid.status.guid))
                 {
-                    var maid = characterMgr.GetMaid(i);
-                    // guid が空のメイドは設定を保存できず、Get するたびに一時的な設定を作ってしまう
-                    if (maid == null || maid.body0 == null || !maid.Visible || maid.IsAllProcPropBusy
-                        || maid.status == null || string.IsNullOrEmpty(maid.status.guid))
-                    {
-                        continue;
-                    }
-                    ScanMaid(maid);
+                    continue;
                 }
+                ScanMaid(maid);
             }
+            _scanMaids.Clear();
 
             _activeMaids.Clear();
             for (var i = _bindings.Count - 1; i >= 0; i--)
